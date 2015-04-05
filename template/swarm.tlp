@@ -1,0 +1,18 @@
+{
+    "app_name": "[[[.Name]]]",
+    "services": [
+        {
+            "service_name": "[[[.Name]]]-service",
+            "components": [
+                {
+                    "component_name": "[[[.Name]]]-component",
+                    "image": "registry.giantswarm.io/[[[.Login]]]/[[[.Name]]]",
+                    "ports": [ "5000/tcp"],
+                        "domains": {
+                                "[[[.Name]]]-[[[.Login]]].gigantic.io": 5000
+                                   }
+                }
+            ]
+        }
+    ]
+}
