@@ -91,7 +91,9 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 				}
 			}
 			if v == "delete" || v == "remove" {
-				swarm.SwarmDelete(appname)
+				if swarm.SwarmLogin(appname) == true {
+					swarm.SwarmDelete(appname)
+				}
 			}
 		}
 		if k == "state" {

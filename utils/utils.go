@@ -72,6 +72,7 @@ func cmd(command string) bool {
 }
 
 func Build(name string) bool {
+	RemoveCid(name)
 	errbuild := cmdout("docker run -i --cidfile=" + os.Getenv("HOME") + "/" + name + "/git2docker.cidfile " + os.Getenv("USER") + "/" + name + ":build /bin/bash -c '/build/builder'")
 	if errbuild != true {
 		fmt.Println("Error ---> Compiling Code...")
@@ -99,7 +100,6 @@ func CommitSource(name string, tmpdir string) bool {
 	} else {
 		if cmd("docker commit " + GetCid(name) + " " + os.Getenv("USER") + "/" + name + ":build") {
 			RemoveContainer(GetCid(name))
-			RemoveCid(name)
 			return true
 		}
 	}
