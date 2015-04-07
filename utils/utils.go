@@ -73,11 +73,12 @@ func cmd(command string) bool {
 
 func Build(name string) bool {
 	RemoveCid(name)
-	errbuild := cmdout("docker run -i --cidfile=" + os.Getenv("HOME") + "/" + name + "/git2docker.cidfile " + os.Getenv("USER") + "/" + name + ":build /bin/bash -c '/build/builder'")
+	errbuild := cmdout("docker run -i --cidfile=" + os.Getenv("HOME") + "/" + name + "_git2docker.cidfile " + os.Getenv("USER") + "/" + name + ":build /bin/bash -c '/build/builder'")
 	if errbuild != true {
 		fmt.Println("Error ---> Compiling Code...")
 		RemoveContainer(GetCid(name))
 		RemoveCid(name)
+		RemoveImages(os.Getenv("USER") + "/" + name + ":build")
 		return false
 	} else {
 		cmd("docker commit " + GetCid(name) + " " + os.Getenv("USER") + "/" + name + ":start")
@@ -90,8 +91,7 @@ func Build(name string) bool {
 
 func CommitSource(name string, tmpdir string) bool {
 	CleanUP(name)
-	RemoveCid(name)
-	errtar := cmd("cd " + tmpdir + " && tar c . | docker run -i -a stdin --cidfile=" + os.Getenv("HOME") + "/" + name + "/git2docker.cidfile build:image /bin/bash -c 'mkdir -p /app && tar -xC /app'")
+	errtar := cmd("cd " + tmpdir + " && tar c . | docker run -i -a stdin --cidfile=" + os.Getenv("HOME") + "/" + name + "_git2docker.cidfile cooltrick/git2docker /bin/bash -c 'mkdir -p /app && tar -xC /app'")
 	if errtar != true {
 		fmt.Println("Error ---> Deploying Code...")
 		RemoveContainer(GetCid(name))
@@ -100,6 +100,7 @@ func CommitSource(name string, tmpdir string) bool {
 	} else {
 		if cmd("docker commit " + GetCid(name) + " " + os.Getenv("USER") + "/" + name + ":build") {
 			RemoveContainer(GetCid(name))
+			RemoveCid(name)
 			return true
 		}
 	}
@@ -141,7 +142,7 @@ func Start(name string) {
 }
 
 func Run(name string) {
-	err := cmd("docker run -i -d -P --cidfile=" + os.Getenv("HOME") + "/" + name + "/git2docker.cidfile " + os.Getenv("USER") + "/" + name + ":start /start")
+	err := cmd("docker run -i -d -P --cidfile=" + os.Getenv("HOME") + "/" + name + "_git2docker.cidfile " + os.Getenv("USER") + "/" + name + ":start /start")
 	if err != true {
 		fmt.Println("Error ---> Starting Code...")
 
@@ -218,7 +219,7 @@ func CleanSource(name string) {
 }
 
 func GetCid(name string) string {
-	content, err := ioutil.ReadFile(os.Getenv("HOME") + "/" + name + "/git2docker.cidfile")
+	content, err := ioutil.ReadFile(os.Getenv("HOME") + "/" + name + "_git2docker.cidfile")
 	if err == nil {
 		lines := strings.Split(string(content), "\n")
 		return lines[0]
@@ -228,5 +229,5 @@ func GetCid(name string) string {
 }
 
 func RemoveCid(name string) {
-	os.RemoveAll(os.Getenv("HOME") + "/" + name + "/git2docker.cidfile")
+	os.RemoveAll(os.Getenv("HOME") + "/" + name + "_git2docker.cidfile")
 }
