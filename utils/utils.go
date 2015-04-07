@@ -113,8 +113,10 @@ func CommitSource(name string, tmpdir string) bool {
 	errtar := cmd("cd " + tmpdir + " && tar c . | docker run -i -a stdin --name=StorageApp_" + os.Getenv("USER") + "_" + name + " -v /app busybox /bin/sh -c 'tar -xC /app'")
 	if errtar != true {
 		fmt.Println("Error ---> Deploying Code...")
+		os.RemoveAll(tmpdir)
 		return false
 	} else {
+		os.RemoveAll(tmpdir)
 		return true
 	}
 
