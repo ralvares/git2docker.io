@@ -3,7 +3,6 @@ package build
 import (
 	"fmt"
 	"github.com/cooltrick/cfg"
-	"github.com/cooltrick/git2docker.io/swarm"
 	"github.com/cooltrick/git2docker.io/utils"
 	"log"
 	"os"
@@ -19,7 +18,9 @@ func BuildImage(name string, tmpdir string, userhome string, username string, ap
 }
 
 func BuildAppGit(appname string, tmpdir string, userhome string, username string, rev string) {
+
 	os.RemoveAll(tmpdir)
+
 	GitCmd := exec.Command("git", "clone", userhome+"/"+appname, tmpdir)
 	out, err := GitCmd.CombinedOutput()
 	if err != nil {
@@ -63,49 +64,14 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 
 	for k, v := range myconf {
 
-		if k == "swarm" {
-			if v == "build" {
-				if swarm.SwarmGenerateJson(appname) {
-					if swarm.SwarmLogin(appname) == true {
-						os.RemoveAll(tmpdir + "/git2docker.conf ")
-						if swarm.SwarmrImageServer(appname) {
-							fmt.Println("Building Image")
-							if utils.CommitSource(appname, tmpdir) {
-								if utils.Build(appname) {
-									if swarm.SwarmImage(appname) {
-										if swarm.PushImage(appname) {
-											swarm.SwarmDelete(appname)
-											swarm.SwarmUP(appname)
-											swarm.SwarmLS()
-										}
-									}
-								}
-								//SwarmUP()
-								os.RemoveAll(tmpdir)
-							}
-						}
-					} else {
-						fmt.Println("Login at swarm ... - ERROR")
-					}
-
-				}
-			}
-			if v == "delete" || v == "remove" {
-				if swarm.SwarmLogin(appname) == true {
-					swarm.SwarmDelete(appname)
-				}
-			}
-		}
 		if k == "state" {
 
 			if v == "build" {
 				os.RemoveAll(tmpdir + "/git2docker.conf ")
 
 				if utils.CommitSource(appname, tmpdir) {
-					fmt.Println("Building Image")
-					utils.Build(appname)
-					utils.Run(appname)
-					os.RemoveAll(tmpdir)
+					utils.Build(appname, tmpdir)
+					utils.Run(appname, tmpdir)
 				}
 			}
 

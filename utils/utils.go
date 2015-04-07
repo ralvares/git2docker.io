@@ -2,10 +2,8 @@ package utils
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 func Createlock(dirname string) bool {
@@ -71,46 +69,61 @@ func cmd(command string) bool {
 	}
 }
 
-func Build(name string) bool {
-	RemoveCid(name)
-	errbuild := cmdout("docker run -i --cidfile=" + os.Getenv("HOME") + "/" + name + "_git2docker.cidfile " + os.Getenv("USER") + "/" + name + ":build /bin/bash -c '/build/builder'")
+func Build(name string, tmpdir string) bool {
+
+	if State("App_" + os.Getenv("USER") + "_" + name) {
+		Stop("App_" + os.Getenv("USER") + "_" + name)
+	}
+
+	if ContainerExist("App_" + os.Getenv("USER") + "_" + name) {
+		RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
+	}
+	errbuild := cmdout("docker run -i --rm --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from StorageApp_" + os.Getenv("USER") + "_" + name + " cooltrick/git2docker /bin/bash -c '/build/builder'")
 	if errbuild != true {
-		fmt.Println("Error ---> Compiling Code...")
-		RemoveContainer(GetCid(name))
-		RemoveCid(name)
-		RemoveImages(os.Getenv("USER") + "/" + name + ":build")
+		fmt.Println("Error ---> Building Image...")
+		//RemoveContainer(GetCid(name))
+		//RemoveCid(name)
 		return false
 	} else {
-		cmd("docker commit " + GetCid(name) + " " + os.Getenv("USER") + "/" + name + ":start")
-		RemoveContainer(GetCid(name))
-		RemoveCid(name)
-		RemoveImages(os.Getenv("USER") + "/" + name + ":build")
+		//cmd("docker commit " + GetCid(name) + " " + os.Getenv("USER") + "/" + name)
+		//RemoveContainer(GetCid(name))
+		//RemoveCid(name)
 		return true
 	}
 }
 
 func CommitSource(name string, tmpdir string) bool {
-	CleanUP(name)
-	errtar := cmd("cd " + tmpdir + " && tar c . | docker run -i -a stdin --cidfile=" + os.Getenv("HOME") + "/" + name + "_git2docker.cidfile cooltrick/git2docker /bin/bash -c 'mkdir -p /app && tar -xC /app'")
+
+	if State("StorageApp_" + os.Getenv("USER") + "_" + name) {
+		Stop("StorageApp_" + os.Getenv("USER") + "_" + name)
+	}
+
+	if ContainerExist("StorageApp_" + os.Getenv("USER") + "_" + name) {
+		RemoveContainer("StorageApp_" + os.Getenv("USER") + "_" + name)
+	}
+
+	if State("App_" + os.Getenv("USER") + "_" + name) {
+		Stop("App_" + os.Getenv("USER") + "_" + name)
+	}
+
+	if ContainerExist("App_" + os.Getenv("USER") + "_" + name) {
+		RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
+	}
+
+	errtar := cmd("cd " + tmpdir + " && tar c . | docker run -i -a stdin --name=StorageApp_" + os.Getenv("USER") + "_" + name + " -v /app busybox /bin/sh -c 'tar -xC /app'")
 	if errtar != true {
 		fmt.Println("Error ---> Deploying Code...")
-		RemoveContainer(GetCid(name))
-		RemoveCid(name)
 		return false
 	} else {
-		if cmd("docker commit " + GetCid(name) + " " + os.Getenv("USER") + "/" + name + ":build") {
-			RemoveContainer(GetCid(name))
-			RemoveCid(name)
-			return true
-		}
+		return true
 	}
-	return false
 
 }
 
 func RemoveContainer(name string) {
 	//err := cmd("docker kill " + name + " && docker rm " + name)
-	err := cmd("docker rm " + name)
+	err := cmd("docker rm -f -v " + name)
+
 	if err != true {
 		fmt.Println("Error ---> Deleting Container Docker...")
 
@@ -141,11 +154,14 @@ func Start(name string) {
 	}
 }
 
-func Run(name string) {
-	err := cmd("docker run -i -d -P --cidfile=" + os.Getenv("HOME") + "/" + name + "_git2docker.cidfile " + os.Getenv("USER") + "/" + name + ":start /start")
+func Run(name string, tmpdir string) {
+	err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " cooltrick/git2docker:start '/start'")
 	if err != true {
 		fmt.Println("Error ---> Starting Code...")
 
+	} else {
+		fmt.Println(name + " Started")
+		Ports(name)
 	}
 }
 
@@ -177,57 +193,30 @@ func ContainerExist(name string) bool {
 }
 
 func Ports(name string) {
-	state := cmd("docker inspect -f '{{range $p, $conf := .NetworkSettings.Ports}}{{(index $conf 0).HostPort}} {{end}}' " + name)
+	state := cmdout("docker inspect -f '{{range $p, $conf := .NetworkSettings.Ports}}{{(index $conf 0).HostPort}} {{end}}' App_" + os.Getenv("USER") + "_" + name)
 	if state != true {
 		fmt.Println("No Ports")
-	} else {
-		fmt.Println(state)
 	}
 }
 
 func CleanUP(name string) {
-	if State(GetCid(name)) {
-		Stop(GetCid(name))
+	if State("StorageApp_" + os.Getenv("USER") + "_" + name) {
+		Stop("StorageApp_" + os.Getenv("USER") + "_" + name)
 	}
 
-	if ContainerExist(GetCid(name)) {
-		RemoveContainer(GetCid(name))
+	if ContainerExist("StorageApp_" + os.Getenv("USER") + "_" + name) {
+		RemoveContainer("StorageApp_" + os.Getenv("USER") + "_" + name)
 	}
 
-	if ImageExist(os.Getenv("USER") + "/" + name + ":start") {
-		RemoveImages(os.Getenv("USER") + "/" + name + ":start")
+	if State("App_" + os.Getenv("USER") + "_" + name) {
+		Stop("App_" + os.Getenv("USER") + "_" + name)
 	}
 
-	if ImageExist(os.Getenv("USER") + "/" + name + ":build") {
-		RemoveImages(os.Getenv("USER") + "/" + name + ":build")
+	if ContainerExist("App_" + os.Getenv("USER") + "_" + name) {
+		RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
 	}
-
-	RemoveCid(name)
-
-}
-
-func CleanSource(name string) {
-
-	if State(GetCid(name)) {
-		Stop(GetCid(name))
-	}
-
-	if ContainerExist(GetCid(name)) {
-		RemoveContainer(GetCid(name))
-	}
-	RemoveCid(name)
 }
 
 func GetCid(name string) string {
-	content, err := ioutil.ReadFile(os.Getenv("HOME") + "/" + name + "_git2docker.cidfile")
-	if err == nil {
-		lines := strings.Split(string(content), "\n")
-		return lines[0]
-	} else {
-		return "Error - GetCid"
-	}
-}
-
-func RemoveCid(name string) {
-	os.RemoveAll(os.Getenv("HOME") + "/" + name + "_git2docker.cidfile")
+	return "App_" + os.Getenv("USER") + "_" + name
 }
