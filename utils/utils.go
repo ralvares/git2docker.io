@@ -110,7 +110,7 @@ func CommitSource(name string, tmpdir string) bool {
 		RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
 	}
 
-	errtar := cmd("cd " + tmpdir + " && tar c . | docker run -i -a stdin --name=StorageApp_" + os.Getenv("USER") + "_" + name + " -v /app busybox /bin/sh -c 'tar -xC /app'")
+	errtar := cmd("cd " + tmpdir + " && tar c . | docker run -i -a stdin --name=StorageApp_" + os.Getenv("USER") + "_" + name + " -v /app -v /tmp/cache:/cache busybox /bin/sh -c 'tar -xC /app'")
 	if errtar != true {
 		fmt.Println("Error ---> Deploying Code...")
 		os.RemoveAll(tmpdir)
@@ -156,8 +156,16 @@ func Start(name string) {
 	}
 }
 
+func Logs(name string) {
+	err := cmdout("docker logs -f App_" + os.Getenv("USER") + "_" + name)
+	if err != true {
+		fmt.Println("Error ---> Showing Logs Docker...")
+
+	}
+}
+
 func Run(name string, tmpdir string) {
-	err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " cooltrick/git2docker:start '/start'")
+	err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + name + "." + os.Getenv("USER") + " cooltrick/git2docker:start '/start'")
 	if err != true {
 		fmt.Println("Error ---> Starting Code...")
 

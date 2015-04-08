@@ -75,6 +75,24 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 				}
 			}
 
+			if v == "build:logs" {
+				os.RemoveAll(tmpdir + "/git2docker.conf ")
+
+				if utils.CommitSource(appname, tmpdir) {
+					utils.Build(appname, tmpdir)
+					utils.Run(appname, tmpdir)
+					utils.Logs(appname)
+				}
+			}
+
+			if v == "logs" {
+				if utils.State("App_" + username + "_" + appname) {
+					utils.Logs(appname)
+				} else {
+					fmt.Println("APP don't exist...")
+				}
+			}
+
 			if v == "remove" || v == "delete" {
 
 				utils.CleanUP(appname)
@@ -95,6 +113,16 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 				} else {
 					utils.Start(utils.GetCid(appname))
 					fmt.Println("App - " + appname + " - Started")
+				}
+			}
+
+			if v == "start:logs" {
+				if utils.State(utils.GetCid(appname)) {
+					fmt.Println("Container -> UP")
+				} else {
+					utils.Start(utils.GetCid(appname))
+					fmt.Println("App - " + appname + " - Started")
+					utils.Logs(appname)
 				}
 			}
 
