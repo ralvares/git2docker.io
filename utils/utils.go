@@ -122,6 +122,51 @@ func CommitSource(name string, tmpdir string) bool {
 
 }
 
+func Dockerbuild(name string, tmpdir string) bool {
+
+	if State("StorageApp_" + os.Getenv("USER") + "_" + name) {
+		Stop("StorageApp_" + os.Getenv("USER") + "_" + name)
+	}
+
+	if ContainerExist("StorageApp_" + os.Getenv("USER") + "_" + name) {
+		RemoveContainer("StorageApp_" + os.Getenv("USER") + "_" + name)
+	}
+
+	if State("App_" + os.Getenv("USER") + "_" + name) {
+		Stop("App_" + os.Getenv("USER") + "_" + name)
+	}
+
+	if ContainerExist("App_" + os.Getenv("USER") + "_" + name) {
+		RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
+	}
+
+	if ImageExist(os.Getenv("USER") + "/" + name + ":dockerfile") {
+		RemoveImages(os.Getenv("USER") + "/" + name + ":dockerfile")
+	}
+
+	errtar := cmdout("cd " + tmpdir + " && docker build --rm -t " + os.Getenv("USER") + "/" + name + ":dockerfile --force-rm .")
+	if errtar != true {
+		fmt.Println("Error ---> Docker Build...")
+		os.RemoveAll(tmpdir)
+		return false
+	} else {
+		os.RemoveAll(tmpdir)
+		return true
+	}
+
+}
+
+func RunDockerbuild(name string, tmpdir string, domain string) {
+	err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + domain + " " + os.Getenv("USER") + "/" + name + ":dockerfile")
+	if err != true {
+		fmt.Println("Error ---> Starting Docker...")
+
+	} else {
+		fmt.Println(name + " Started")
+		Ports(name)
+	}
+}
+
 func RemoveContainer(name string) {
 	//err := cmd("docker kill " + name + " && docker rm " + name)
 	err := cmd("docker rm -f -v " + name)
@@ -225,6 +270,11 @@ func CleanUP(name string) {
 	if ContainerExist("App_" + os.Getenv("USER") + "_" + name) {
 		RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
 	}
+
+	if ImageExist(os.Getenv("USER") + "/" + name + ":dockerfile") {
+		RemoveImages(os.Getenv("USER") + "/" + name + ":dockerfile")
+	}
+
 	if _, err := os.Stat(os.Getenv("HOME") + "/" + name); err == nil {
 		File, errFile := os.Create(os.Getenv("HOME") + "/" + name + "/.remove")
 		defer File.Close()

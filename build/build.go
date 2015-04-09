@@ -10,14 +10,15 @@ import (
 )
 
 type Git2Dockerconf struct {
-	Domain   string
-	State    string
-	Preexec  string
-	Git      string
-	Database string
+	Domain     string
+	State      string
+	Preexec    string
+	Git        string
+	Database   string
+	Dockerfile bool
 }
 
-func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (string, string, string, string, string) {
+func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (string, string, string, string, string, bool) {
 
 	os.RemoveAll(tmpdir)
 	os.RemoveAll(tmpdir + "_conf")
@@ -52,6 +53,11 @@ func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (strin
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if _, err := os.Stat(tmpdir + "_conf/Dockerfile"); err == nil {
+		n.Dockerfile = true
+	}
+
 	for k, v := range myconf {
 		if k == "state" {
 			n.State = v
@@ -68,12 +74,16 @@ func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (strin
 			n.Database = v
 		}
 		if k == "git" {
-			n.Git = v
+			if n.Dockerfile {
+				n.Git = ""
+			} else {
+				n.Git = v
+			}
 		}
 
 	}
 	//os.RemoveAll(os.TempDir() + "/" + os.Getenv("USER") + "_" + name + "_git2docker.conf")
-	return n.Domain, n.State, n.Preexec, n.Git, n.Database
+	return n.Domain, n.State, n.Preexec, n.Git, n.Database, n.Dockerfile
 }
 
 func BuildImage(name string, tmpdir string, userhome string, username string, rev string) {
@@ -131,7 +141,6 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 	}
 
 	if n.State == "build" {
-		//os.RemoveAll(os.TempDir() + "/" + os.Getenv("USER") + "_" + appname + "_git2docker.conf")
 
 		if utils.CommitSource(appname, tmpdir) {
 			utils.Build(appname, tmpdir)
@@ -139,9 +148,18 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 		}
 	}
 
-	if n.State == "build:logs" {
-		//os.RemoveAll(os.TempDir() + "/" + os.Getenv("USER") + "_" + appname + "_git2docker.conf")
+	if n.State == "Dockerfile" || n.State == "dockerfile" {
+		if n.Dockerfile {
+			fmt.Println("Dockerfile exist")
+			if utils.Dockerbuild(appname, tmpdir) {
+				utils.RunDockerbuild(appname, tmpdir, n.Domain)
+			}
+		} else {
+			fmt.Println("Dockerfile don't exist")
+		}
+	}
 
+	if n.State == "build:logs" {
 		if utils.CommitSource(appname, tmpdir) {
 			utils.Build(appname, tmpdir)
 			utils.Run(appname, tmpdir, n.Domain, n.Preexec)
