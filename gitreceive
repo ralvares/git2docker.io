@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 GITUSER=${GITUSER:-`id -un`}
 GITHOME="/home/$GITUSER"
@@ -49,6 +49,8 @@ EOF
     git-shell -c "$SSH_ORIGINAL_COMMAND"
 
     if [ -f $REPO_PATH/.remove ] ; then rm -rf $REPO_PATH;     fi
+    if [ -d /tmp/$GITUSER'_'$RECEIVE_REPO ] ; then rm -rf /tmp/$GITUSER'_'$RECEIVE_REPO;     fi
+    if [ -d /tmp/$GITUSER'_'$RECEIVE_REPO'_'conf ] ; then rm -rf /tmp/$GITUSER'_'$RECEIVE_REPO'_'conf;     fi
     ;;
 
   hook)
