@@ -164,8 +164,8 @@ func Logs(name string) {
 	}
 }
 
-func Run(name string, tmpdir string) {
-	err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + name + "." + os.Getenv("USER") + " cooltrick/git2docker:start '/start'")
+func Run(name string, tmpdir string, domain string, preexec string) {
+	err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + domain + " cooltrick/git2docker:start /bin/bash -c '/preexec " + preexec + " && /start'")
 	if err != true {
 		fmt.Println("Error ---> Starting Code...")
 

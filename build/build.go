@@ -9,9 +9,76 @@ import (
 	"os/exec"
 )
 
-func BuildImage(name string, tmpdir string, userhome string, username string, appname string) {
+type Git2Dockerconf struct {
+	Domain   string
+	State    string
+	Preexec  string
+	Git      string
+	Database string
+}
+
+func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (string, string, string, string, string) {
+
+	os.RemoveAll(tmpdir)
+	os.RemoveAll(tmpdir + "_conf")
+
+	GitCmd := exec.Command("git", "clone", os.Getenv("HOME")+"/"+name, tmpdir+"_conf")
+	out, errGit := GitCmd.CombinedOutput()
+	if errGit != nil {
+		fmt.Println(string(out))
+		os.RemoveAll(tmpdir + "_conf")
+		panic(errGit)
+	}
+
+	os.Setenv("GIT_DIR", os.Getenv("HOME")+"/"+name)
+	os.Setenv("GIT_WORK_TREE", tmpdir+"_conf")
+
+	GitChk := exec.Command("git", "checkout", rev, "-f")
+	out, errchk := GitChk.CombinedOutput()
+	if errchk != nil {
+		fmt.Println(string(out))
+		os.RemoveAll(tmpdir + "_conf")
+		panic(errchk)
+	}
+
+	errChmod := os.Chmod(tmpdir+"_conf", 0755)
+	if errChmod != nil {
+		os.RemoveAll(tmpdir + "_conf")
+		panic(errChmod)
+	}
+
+	myconf := make(map[string]string)
+	err := cfg.Load(tmpdir+"_conf/git2docker.conf", myconf)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for k, v := range myconf {
+		if k == "state" {
+			n.State = v
+		}
+		if k == "preexec" {
+			n.Preexec = v
+		}
+
+		if k == "domain" {
+			n.Domain = v
+		}
+
+		if k == "database" {
+			n.Database = v
+		}
+		if k == "git" {
+			n.Git = v
+		}
+
+	}
+	//os.RemoveAll(os.TempDir() + "/" + os.Getenv("USER") + "_" + name + "_git2docker.conf")
+	return n.Domain, n.State, n.Preexec, n.Git, n.Database
+}
+
+func BuildImage(name string, tmpdir string, userhome string, username string, rev string) {
 	if utils.VerifyAppName(name) {
-		BuildAppGit(name, tmpdir, userhome, username, appname)
+		BuildAppGit(name, tmpdir, userhome, username, rev)
 	} else {
 		fmt.Println("Erro - VerifyAppName")
 	}
@@ -19,113 +86,108 @@ func BuildImage(name string, tmpdir string, userhome string, username string, ap
 
 func BuildAppGit(appname string, tmpdir string, userhome string, username string, rev string) {
 
-	os.RemoveAll(tmpdir)
+	n := Git2Dockerconf{}
+	n.GetInfos(appname, tmpdir, rev)
 
-	GitCmd := exec.Command("git", "clone", userhome+"/"+appname, tmpdir)
-	out, err := GitCmd.CombinedOutput()
-	if err != nil {
-		fmt.Println(string(out))
-		os.RemoveAll(tmpdir)
-		panic(err)
-	}
+	if len(n.Git) <= 0 {
 
-	os.Setenv("GIT_DIR", userhome+"/"+appname)
-	os.Setenv("GIT_WORK_TREE", tmpdir)
+		MVCmd := exec.Command("mv", tmpdir+"_conf", tmpdir)
+		out, err := MVCmd.CombinedOutput()
+		if err != nil {
+			fmt.Println(string(out))
+			os.RemoveAll(tmpdir + "_conf")
+			panic(err)
+		}
 
-	GitChk := exec.Command("git", "checkout", rev, "-f")
-	out, errchk := GitChk.CombinedOutput()
-	if errchk != nil {
-		fmt.Println(string(out))
-		os.RemoveAll(tmpdir)
-		panic(errchk)
-	}
+	} else {
 
-	errChmod := os.Chmod(tmpdir, 0755)
-	if errChmod != nil {
-		os.RemoveAll(tmpdir)
-		panic(errChmod)
-	}
+		os.Setenv("GIT_DIR", os.Getenv("HOME")+"/"+appname)
+		os.Setenv("GIT_WORK_TREE", tmpdir)
 
-	if !utils.Createlock(tmpdir) {
-		fmt.Println("Erro - LOCK FILE")
-		os.RemoveAll(tmpdir)
-		os.Exit(1)
+		GitCmd := exec.Command("git", "clone", n.Git, tmpdir)
+		out, err := GitCmd.CombinedOutput()
+		if err != nil {
+			fmt.Println(string(out))
+			os.RemoveAll(tmpdir)
+			panic(err)
+		}
+
+		errChmod := os.Chmod(tmpdir, 0755)
+		if errChmod != nil {
+			os.RemoveAll(tmpdir)
+			panic(errChmod)
+		}
 	}
 
 	//Building
 	os.RemoveAll(tmpdir + "/.git")
 
-	myconf := make(map[string]string)
-	errconf := cfg.Load(tmpdir+"git2docker.conf", myconf)
-	if errconf != nil {
-		fmt.Printf("File git2docker.conf not Found")
-		log.Fatal(err)
+	if len(n.Domain) <= 0 {
+		n.Domain = appname + "." + os.Getenv("USER")
 	}
 
-	for k, v := range myconf {
+	if len(n.Preexec) <= 0 {
+		n.Preexec = "true"
+	}
 
-		if k == "state" {
+	if n.State == "build" {
+		//os.RemoveAll(os.TempDir() + "/" + os.Getenv("USER") + "_" + appname + "_git2docker.conf")
 
-			if v == "build" {
-				os.RemoveAll(tmpdir + "/git2docker.conf ")
-
-				if utils.CommitSource(appname, tmpdir) {
-					utils.Build(appname, tmpdir)
-					utils.Run(appname, tmpdir)
-				}
-			}
-
-			if v == "build:logs" {
-				os.RemoveAll(tmpdir + "/git2docker.conf ")
-
-				if utils.CommitSource(appname, tmpdir) {
-					utils.Build(appname, tmpdir)
-					utils.Run(appname, tmpdir)
-					utils.Logs(appname)
-				}
-			}
-
-			if v == "logs" {
-				if utils.State("App_" + username + "_" + appname) {
-					utils.Logs(appname)
-				} else {
-					fmt.Println("APP don't exist...")
-				}
-			}
-
-			if v == "remove" || v == "delete" {
-
-				utils.CleanUP(appname)
-
-				fmt.Println("App - " + appname + " - Removed")
-			}
-
-			if v == "stop" {
-
-				utils.Stop(utils.GetCid(appname))
-
-				fmt.Println("App - " + appname + " - Stoped")
-			}
-
-			if v == "start" {
-				if utils.State(utils.GetCid(appname)) {
-					fmt.Println("Container -> UP")
-				} else {
-					utils.Start(utils.GetCid(appname))
-					fmt.Println("App - " + appname + " - Started")
-				}
-			}
-
-			if v == "start:logs" {
-				if utils.State(utils.GetCid(appname)) {
-					fmt.Println("Container -> UP")
-				} else {
-					utils.Start(utils.GetCid(appname))
-					fmt.Println("App - " + appname + " - Started")
-					utils.Logs(appname)
-				}
-			}
-
+		if utils.CommitSource(appname, tmpdir) {
+			utils.Build(appname, tmpdir)
+			utils.Run(appname, tmpdir, n.Domain, n.Preexec)
 		}
 	}
+
+	if n.State == "build:logs" {
+		//os.RemoveAll(os.TempDir() + "/" + os.Getenv("USER") + "_" + appname + "_git2docker.conf")
+
+		if utils.CommitSource(appname, tmpdir) {
+			utils.Build(appname, tmpdir)
+			utils.Run(appname, tmpdir, n.Domain, n.Preexec)
+			utils.Logs(appname)
+		}
+	}
+
+	if n.State == "logs" {
+		if utils.State("App_" + username + "_" + appname) {
+			utils.Logs(appname)
+		} else {
+			fmt.Println("APP don't exist...")
+		}
+	}
+
+	if n.State == "remove" || n.State == "delete" {
+
+		utils.CleanUP(appname)
+
+		fmt.Println("App - " + appname + " - Removed")
+	}
+
+	if n.State == "stop" {
+
+		utils.Stop(utils.GetCid(appname))
+
+		fmt.Println("App - " + appname + " - Stoped")
+	}
+
+	if n.State == "start" {
+		if utils.State(utils.GetCid(appname)) {
+			fmt.Println("Container -> UP")
+		} else {
+			utils.Start(utils.GetCid(appname))
+			fmt.Println("App - " + appname + " - Started")
+		}
+	}
+
+	if n.State == "start:logs" {
+		if utils.State(utils.GetCid(appname)) {
+			fmt.Println("Container -> UP")
+		} else {
+			utils.Start(utils.GetCid(appname))
+			fmt.Println("App - " + appname + " - Started")
+			utils.Logs(appname)
+		}
+	}
+
 }

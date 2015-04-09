@@ -11,7 +11,7 @@ var (
 	username string = os.Getenv("USER")
 	appname  string = os.Args[1]
 	rev      string = os.Args[2]
-	tmpdir   string = os.TempDir() + "/" + username + "_" + appname + "/"
+	tmpdir   string = os.TempDir() + "/" + username + "_" + appname
 )
 
 func main() {

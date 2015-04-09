@@ -7,11 +7,11 @@ git2docker.conf
 Options:
 
 state=build,delete ,stop,logs,build:logs,start and start:logs ( if logs flag is active, the git client will show the logs until Ctrl+C)
+domain=domain.tlp
+pre-exec=Command to execute before /start
+git=http://login:pass@link/repo.git ( Auth just works with http )
 
 
 To Develop:
 
-domain=domain.tlp
-pre-exec=Command to execute before /start
-git=http://login:pass@link/repo.git ( Auth just works with http )
-database=mysql or pgsql or redis 
+database=mysql or pgsql or redis
