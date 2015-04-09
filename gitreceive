@@ -32,7 +32,8 @@ case "$1" in
     export RECEIVE_FINGERPRINT=$3
     # ssh provides the original requested command in $SSH_ORIGINAL_COMMAND
     export RECEIVE_REPO="$(echo $SSH_ORIGINAL_COMMAND | awk '{print $2}' | perl -pe 's/(?<!\\)'\''//g' | sed 's/\\'\''/'\''/g')"
-    REPO_PATH="$GITHOME/$RECEIVE_REPO"
+    REPO_PATH="$GITHOME/$RECEIVE_REPO"  
+
     if [ ! -d $REPO_PATH ]; then
       mkdir -p $REPO_PATH
       cd $REPO_PATH
@@ -46,6 +47,8 @@ cat | $SELF hook
 EOF
     chmod +x $PRERECEIVE_HOOK
     git-shell -c "$SSH_ORIGINAL_COMMAND"
+
+    if [ -f $REPO_PATH/.remove ] ; then rm -rf $REPO_PATH;     fi
     ;;
 
   hook)
@@ -55,13 +58,13 @@ EOF
       # if block if you wish to run it for others as well.
       if [[ $refname = "refs/heads/master" ]] ; then
         echo "=======> Working - $RECEIVE_REPO"
-        git archive $newrev | /opt/receiver "$RECEIVE_REPO" "$newrev" "$RECEIVE_USER" "$RECEIVE_FINGERPRINT"  
+        git archive $newrev | /opt/receiver "$RECEIVE_REPO" "$newrev" "$RECEIVE_USER" "$RECEIVE_FINGERPRINT"
         rc=$?
         if [[ $rc != 0 ]] ; then
           echo "      ERROR: failed on rev $newrev - push denied"
           exit $rc
         fi
-      fi
+      fi    
     done
     #exit 1 # for debugging
     ;;

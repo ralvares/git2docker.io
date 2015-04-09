@@ -225,6 +225,13 @@ func CleanUP(name string) {
 	if ContainerExist("App_" + os.Getenv("USER") + "_" + name) {
 		RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
 	}
+	if _, err := os.Stat(os.Getenv("HOME") + "/" + name); err == nil {
+		File, errFile := os.Create(os.Getenv("HOME") + "/" + name + "/.remove")
+		defer File.Close()
+		if errFile != nil {
+			panic(errFile)
+		}
+	}
 }
 
 func GetCid(name string) string {
