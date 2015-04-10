@@ -2,16 +2,40 @@
 # Read the Wiki
 https://github.com/cooltrick/git2docker.io/wiki
 
-git2docker.conf
+git2docker.conf file
 
-Options:
+===============================
+state Options:
 
-state=build,delete ,stop,logs,build:logs,start and start:logs ( if logs flag is active, the git client will show the logs until Ctrl+C)
-domain=domain.tlp
-pre-exec=Command to execute before /start
-git=http://login:pass@link/repo.git ( Auth just works with http )
+build
+
+build:logs
+
+delete or remove
+
+stop
+
+start
+
+start:logs
+
+logs
+
+dockerfile or Dockerfile
 
 
+===============================
+domain Option:
+
+===============================
+pre-exec Option:
+
+===============================
+git Option:
+
+
+
+===============================
 To Develop:
 
 database=mysql or pgsql or redis
