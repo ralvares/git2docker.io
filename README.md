@@ -2,6 +2,9 @@
 # Read the Wiki
 https://github.com/cooltrick/git2docker.io/wiki
 
+cat ~/.ssh/id_rsa.pub | ssh demo@localhost git2docker
+
+
 git2docker.conf file
 
 ===============================

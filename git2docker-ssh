@@ -1,0 +1,12 @@
+#!/bin/sh	
+case "$SSH_ORIGINAL_COMMAND" in
+	"git2docker")
+		/opt/git2docker
+		;;
+	git-*)
+		/opt/gitreceive $1 $2 $3
+		;;
+	*)
+		echo "Access Denied!!"
+		;;
+esac
