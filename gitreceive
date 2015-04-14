@@ -41,7 +41,7 @@ EOF
       # if block if you wish to run it for others as well.
       if [[ $refname = "refs/heads/master" ]] ; then
         echo "=======> Working - $RECEIVE_REPO"
-        git archive $newrev | /opt/receiver "$RECEIVE_REPO" "$newrev" "$RECEIVE_USER" "$RECEIVE_FINGERPRINT"
+        git archive $newrev | /opt/git2docker/receiver "$RECEIVE_REPO" "$newrev" "$RECEIVE_USER" "$RECEIVE_FINGERPRINT"
         rc=$?
         if [[ $rc != 0 ]] ; then
           echo "      ERROR: failed on rev $newrev - push denied"
