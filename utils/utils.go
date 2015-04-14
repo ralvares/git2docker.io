@@ -168,7 +168,8 @@ func RunDockerbuild(name string, tmpdir string, domain string) {
 
 	} else {
 		fmt.Println(name + " Started")
-		Ports(name)
+		fmt.Println("Access: http://" + domain + " or Port: " + Ports(name))
+
 	}
 }
 
@@ -201,7 +202,7 @@ func Stop(name string) {
 func Start(name string) {
 	err := cmd("docker start " + name)
 	if err != true {
-		fmt.Println("Error ---> Startging Container Docker...")
+		fmt.Println("Error ---> Starting Container Docker...")
 
 	}
 }
@@ -231,13 +232,13 @@ func Run(name string, tmpdir string, domain string, preexec string) {
 			RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
 		}
 
-		err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + "-e VIRTUAL_HOST=" + domain + " cooltrick/git2docker:start /bin/bash -c '/start'")
+		err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + domain + " cooltrick/git2docker:start /bin/bash -c '/start'")
 		if err != true {
 			fmt.Println("Error ---> Starting Code...")
 
 		} else {
 			fmt.Println(name + " Started")
-			Ports(name)
+			fmt.Println("Access: http://" + domain + " or Port: " + Ports(name))
 		}
 	}
 }
@@ -269,10 +270,13 @@ func ContainerExist(name string) bool {
 	}
 }
 
-func Ports(name string) {
-	state := cmdout("docker inspect -f '{{range $p, $conf := .NetworkSettings.Ports}}{{(index $conf 0).HostPort}} {{end}}' App_" + os.Getenv("USER") + "_" + name)
-	if state != true {
-		fmt.Println("No Ports")
+func Ports(name string) string {
+	state := exec.Command("bash", "-c", "docker inspect -f '{{range $p, $conf := .NetworkSettings.Ports}}{{(index $conf 0).HostPort}} {{end}}' App_"+os.Getenv("USER")+"_"+name)
+	out, err := state.CombinedOutput()
+	if err != nil {
+		panic(err)
+	} else {
+		return string(out)
 	}
 }
 

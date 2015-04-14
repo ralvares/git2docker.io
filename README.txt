@@ -248,3 +248,41 @@ git2docker.conf example
 state=build
 domain=app.domain.lnx
 pre-exec=bundle exec rake db:create db:migrate db:seed
+
+===============================
+
+Provided your DNS is setup to forward foo.bar.com to the a host running nginx-proxy, the request will be routed to a container with the domain (git2docker.conf) env var set.
+
+If you not set the domain var, the nginx-proxy will publish the domain using appname.username
+
+Nginx proxy Simple Demo:
+
+Create a systemd service:
+
+cd /etc/systemd/system
+vi nginx-proxy.service
+
+[Unit]
+Description=nginx-proxy
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker kill nginx-proxy
+ExecStartPre=-/usr/bin/docker rm nginx-proxy 
+ExecStartPre=/usr/bin/docker pull jwilder/nginx-proxy  
+ExecStart=/usr/bin/docker run -d --name=nginx-proxy -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock jwilder/nginx-proxy
+
+[Install]
+WantedBy=multi-user.target
+
+====================================================
+Enable and Start service:
+
+systemctl enable /etc/systemd/system/nginx-proxy.service
+systemctl start nginx-proxy.service
+
+Deploy any app seting domain option in git2docker.conf and try do access.
+
+If you haven't a DNS server, You can add the domain at /etc/hosts
