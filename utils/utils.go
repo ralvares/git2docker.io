@@ -219,7 +219,7 @@ func Run(name string, tmpdir string, domain string, preexec string) {
 	if len(preexec) < 0 {
 		preexec = "echo OK"
 	}
-	errPre := cmdout("docker run -i --rm --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " cooltrick/git2docker:start /bin/bash -c '/preexec " + preexec + "'")
+	errPre := cmd("docker run -i --rm --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " cooltrick/git2docker:start /bin/bash -c '/preexec " + preexec + "'")
 	if errPre != true {
 		fmt.Println("Error ---> Starting Pre-Exec...")
 
