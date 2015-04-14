@@ -195,43 +195,22 @@ Using git2docker.conf
 git2docker.conf Options:
 
 ===============================
-state flag options
+state options:
 
-build
-
-Build the application using the source code.
-
-build:logs
-
-Build the application using the source code and start the container showing logs.
-
-delete or remove
-
-Stop and remove the Container
-
-stop
-
-Stop the Container
-
-start
-
-Start a stoped Container
-
-start:logs
-
-Start a stoped Container and show logs
-
-logs
-
-Show logs of a Started Container
+build - Build the application using the source code.
+build:logs - Build the application using the source code and start the container showing logs.
+delete or remove - Stop and remove the Container
+stop - Stop the Container
+start - Start a stoped Container
+start:logs - Start a stoped Container and show logs
+logs - Show logs of a Started Container
+dockerfile or Dockerfile - Force the git2docker to use a Dockerfile
 
 
-dockerfile or Dockerfile
-
-Force the git2docker to use a Dockerfile
+ex: state=build
 
 ===============================
-domain Flag Option:
+domain Option:
 
 ex: domain=app.linux.site
 
@@ -244,7 +223,7 @@ ex: pre-exec=bundle exec rake db:create db:migrate db:seed
 
 
 ===============================
-git flag Option:
+git Option:
 
 If you have your code at an external repository like github, git2docker will download the git and deploy the application.
 
