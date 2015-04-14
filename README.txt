@@ -1,6 +1,7 @@
 git2docker.io
 
 Install:
+OS: OpenSuse 13.2
 
 You will need install docker.
 
