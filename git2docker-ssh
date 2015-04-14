@@ -5,7 +5,7 @@ case "$SSH_ORIGINAL_COMMAND" in
 		/opt/git2docker/git2docker
 		;;
 	git-*)
-		/opt/gitreceive $1 $2 $3
+		/opt/git2docker/gitreceive $1 $2 $3
 		;;
 	backup:$option)
 		echo backuping $option
