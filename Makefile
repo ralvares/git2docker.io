@@ -2,7 +2,8 @@ all:
 	go build receiver.go 
 
 install:
-	cp -rf receiver /opt
-	cp -rf git2docker /opt
-	cp -rf git2docker-ssh /opt
-	ln -s /opt/git2docker /usr/bin/git2docker
+	mkdir /opt/git2docker
+	cp -rf receiver /opt/git2docker
+	cp -rf git2docker /opt/git2docker
+	cp -rf git2docker-ssh /opt/git2docker
+	ln -s /opt/git2dockergit2docker /usr/bin/git2docker
