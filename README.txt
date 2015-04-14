@@ -9,8 +9,10 @@ curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/install.sh
 
 Create a User:
 
-adduser user
+useradd user
+gpasswd -a user docker
 passwd user
+
 
 
 Usage:
