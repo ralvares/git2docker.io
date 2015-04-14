@@ -51,7 +51,6 @@ func cmdout(command string) bool {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println("ERRO")
 		return false
 		panic(err)
 	} else {
@@ -81,6 +80,13 @@ func Build(name string, tmpdir string) bool {
 	errbuild := cmdout("docker run -i --rm --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from StorageApp_" + os.Getenv("USER") + "_" + name + " cooltrick/git2docker /bin/bash -c '/build/builder'")
 	if errbuild != true {
 		fmt.Println("Error ---> Building Image...")
+		if State("StorageApp_" + os.Getenv("USER") + "_" + name) {
+			Stop("StorageApp_" + os.Getenv("USER") + "_" + name)
+		}
+
+		if ContainerExist("StorageApp_" + os.Getenv("USER") + "_" + name) {
+			RemoveContainer("StorageApp_" + os.Getenv("USER") + "_" + name)
+		}
 		//RemoveContainer(GetCid(name))
 		//RemoveCid(name)
 		return false
@@ -150,7 +156,6 @@ func Dockerbuild(name string, tmpdir string) bool {
 		os.RemoveAll(tmpdir)
 		return false
 	} else {
-		os.RemoveAll(tmpdir)
 		return true
 	}
 
@@ -210,13 +215,27 @@ func Logs(name string) {
 }
 
 func Run(name string, tmpdir string, domain string, preexec string) {
-	err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + domain + " cooltrick/git2docker:start /bin/bash -c '/preexec " + preexec + " && /start'")
-	if err != true {
-		fmt.Println("Error ---> Starting Code...")
+	errPre := cmd("docker run -i --rm --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " cooltrick/git2docker:start /bin/bash -c '/preexec " + preexec + "'")
+	if errPre != true {
+		fmt.Println("Error ---> Starting Pre-Exec...")
 
 	} else {
-		fmt.Println(name + " Started")
-		Ports(name)
+		if State("App_" + os.Getenv("USER") + "_" + name) {
+			Stop("App_" + os.Getenv("USER") + "_" + name)
+		}
+
+		if ContainerExist("App_" + os.Getenv("USER") + "_" + name) {
+			RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
+		}
+
+		err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " cooltrick/git2docker:start /bin/bash -c '/start'")
+		if err != true {
+			fmt.Println("Error ---> Starting Code...")
+
+		} else {
+			fmt.Println(name + " Started")
+			Ports(name)
+		}
 	}
 }
 
@@ -251,6 +270,14 @@ func Ports(name string) {
 	state := cmdout("docker inspect -f '{{range $p, $conf := .NetworkSettings.Ports}}{{(index $conf 0).HostPort}} {{end}}' App_" + os.Getenv("USER") + "_" + name)
 	if state != true {
 		fmt.Println("No Ports")
+	}
+}
+
+func CheckDatabase(name string) bool {
+	if _, err := os.Stat("/opt/git2docker-databases/" + name); err == nil {
+		return true
+	} else {
+		return false
 	}
 }
 

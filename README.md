@@ -1,8 +1,16 @@
-# git2docker.io
-# Read the Wiki
-https://github.com/cooltrick/git2docker.io/wiki
+e # git2docker.io
 
-cat ~/.ssh/id_rsa.pub | ssh demo@localhost git2docker
+
+To Install:
+
+Test made using opensuse and centos.
+
+curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/install.sh | sh
+
+
+Add SSH key: 
+
+cat ~/.ssh/id_rsa.pub | ssh LOGIN@X.X.X.X git2docker
 
 
 git2docker.conf file

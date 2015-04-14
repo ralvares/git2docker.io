@@ -16,9 +16,11 @@ type Git2Dockerconf struct {
 	Git        string
 	Database   string
 	Dockerfile bool
+	Port       string
+	Cache      bool
 }
 
-func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (string, string, string, string, string, bool) {
+func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (string, string, string, string, string, bool, string, bool) {
 
 	os.RemoveAll(tmpdir)
 	os.RemoveAll(tmpdir + "_conf")
@@ -77,6 +79,10 @@ func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (strin
 			n.Preexec = v
 		}
 
+		if k == "port" {
+			n.Port = v
+		}
+
 		if k == "domain" {
 			n.Domain = v
 		}
@@ -89,9 +95,17 @@ func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (strin
 			n.Git = v
 		}
 
+		if k == "cache" {
+			if v == "true" {
+				n.Cache = true
+			} else {
+				n.Cache = false
+			}
+		}
+
 	}
 	//os.RemoveAll(os.TempDir() + "/" + os.Getenv("USER") + "_" + name + "_git2docker.conf")
-	return n.Domain, n.State, n.Preexec, n.Git, n.Database, n.Dockerfile
+	return n.Domain, n.State, n.Preexec, n.Git, n.Database, n.Dockerfile, n.Port, n.Cache
 }
 
 func BuildImage(name string, tmpdir string, userhome string, username string, rev string) {
@@ -156,8 +170,20 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 		n.Dockerfile = false
 	}
 
+	if len(n.Database) >= 0 {
+		if utils.CheckDatabase(n.Database) {
+			fmt.Println(n.Database)
+		} else {
+			fmt.Println("DB nao existe")
+		}
+	}
+
 	if n.Dockerfile {
 		if utils.Dockerbuild(appname, tmpdir) {
+			if n.Cache != true {
+				fmt.Println("Cleaning TMP_DIR")
+				os.RemoveAll(tmpdir)
+			}
 			utils.RunDockerbuild(appname, tmpdir, n.Domain)
 		}
 	}
@@ -166,6 +192,9 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 		n.Dockerfile = true
 		if n.Dockerfile {
 			if utils.Dockerbuild(appname, tmpdir) {
+				if n.Cache != true {
+					os.RemoveAll(tmpdir)
+				}
 				utils.RunDockerbuild(appname, tmpdir, n.Domain)
 			}
 		}
@@ -175,16 +204,20 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 		os.RemoveAll(tmpdir + "/Dockerfile")
 		os.RemoveAll(tmpdir + "/git2docker.conf")
 		if utils.CommitSource(appname, tmpdir) {
-			utils.Build(appname, tmpdir)
-			utils.Run(appname, tmpdir, n.Domain, n.Preexec)
+			if utils.Build(appname, tmpdir) {
+				utils.Run(appname, tmpdir, n.Domain, n.Preexec)
+			}
 		}
 	}
 
 	if n.State == "build:logs" {
+		os.RemoveAll(tmpdir + "/Dockerfile")
+		os.RemoveAll(tmpdir + "/git2docker.conf")
 		if utils.CommitSource(appname, tmpdir) {
-			utils.Build(appname, tmpdir)
-			utils.Run(appname, tmpdir, n.Domain, n.Preexec)
-			utils.Logs(appname)
+			if utils.Build(appname, tmpdir) {
+				utils.Run(appname, tmpdir, n.Domain, n.Preexec)
+				utils.Logs(appname)
+			}
 		}
 	}
 
