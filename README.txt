@@ -1,6 +1,6 @@
 git2docker.io
 
-Install:
+Install Server:
 OS: OpenSuse 13.2
 
 You will need install docker.
@@ -139,8 +139,6 @@ Create a git2docker.conf file:
 
 echo state=dockerfile > git2docker.conf
 
-Create a Docker image and Running.
-
 git init
 git add --all
 git commit -m "build"
@@ -248,7 +246,7 @@ ex: pre-exec=bundle exec rake db:create db:migrate db:seed
 ===============================
 git flag Option:
 
-If you have your code at a external repository like github, git2docker will download the git and deploy the application.
+If you have your code at an external repository like github, git2docker will download the git and deploy the application.
 
 ex: git=https://github.com/heroku/node-js-sample
 
