@@ -5,6 +5,15 @@ OS: OpenSuse 13.2
 
 You will need install docker.
 
+zypper install docker
+systemctl enable docker
+systemctl start docker
+systemctl enable sshd
+systemctl start sshd
+
+Firewall: Allow SSH traffic on port 22
+
+
 curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/install.sh | sh
 
 Create a User:

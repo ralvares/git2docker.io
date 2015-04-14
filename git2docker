@@ -1,6 +1,6 @@
 GITUSER=${GITUSER:-`id -un`}
 GITHOME="/home/$GITUSER"
-SELF="/opt/git2docker-ssh"
+SELF="/opt/git2docker/git2docker-ssh"
 
 
 if [ ! -d $GITHOME/.ssh ] ; then mkdir -p $GITHOME/.ssh;     fi

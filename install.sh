@@ -10,3 +10,4 @@ curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/git2docker
 curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/git2docker -o /opt/git2docker/git2docker
 curl https://github.com/cooltrick/git2docker.io/raw/master/receiver -o /opt/git2docker/receiver
 ln -s /opt/git2docker/git2docker /usr/bin/git2docker
+chmod +x /opt/git2docker/*
