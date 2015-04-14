@@ -170,7 +170,7 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 		n.Dockerfile = false
 	}
 
-	if len(n.Database) >= 0 {
+	if len(n.Database) > 0 {
 		if utils.CheckDatabase(n.Database) {
 			fmt.Println(n.Database)
 		} else {
