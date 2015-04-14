@@ -11,7 +11,7 @@ systemctl start docker
 systemctl enable sshd
 systemctl start sshd
 
-Firewall: Allow SSH traffic on port 22
+Disable Firewall.
 
 
 curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/install.sh | sh
