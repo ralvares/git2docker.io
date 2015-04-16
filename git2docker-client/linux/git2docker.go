@@ -74,7 +74,7 @@ func main() {
 	ssh := &easyssh.MakeConfig{
 		User:   user,
 		Server: host,
-		Key:    "/.ssh/id_rsa",
+		Key:    "/.git2docker/id_rsa",
 		Port:   "22",
 	}
 
@@ -151,7 +151,7 @@ func main() {
 
 	}
 
-	if *log {
+	if *logs {
 		if len(*name) <= 0 {
 			flag.Usage()
 			return

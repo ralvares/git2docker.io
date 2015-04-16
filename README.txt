@@ -346,6 +346,7 @@ yes
 Linux Cli Option
 
 mkdir ~/.git2docker
+cp -rf ~/.ssh/id_rsa* ~/.git2docker
 
 create a file ~/.git2docker/git2docker.conf:
 user=user
