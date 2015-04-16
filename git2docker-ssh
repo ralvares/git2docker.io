@@ -1,5 +1,5 @@
 #!/bin/sh
-
+export APP="$(echo $SSH_ORIGINAL_COMMAND | awk '{print $2}' | perl -pe 's/(?<!\\)'\''//g' | sed 's/\\'\''/'\''/g')"
 case "$SSH_ORIGINAL_COMMAND" in
 	"git2docker")
 		/opt/git2docker/git2docker
@@ -7,9 +7,21 @@ case "$SSH_ORIGINAL_COMMAND" in
 	git-*)
 		/opt/git2docker/gitreceive $1 $2 $3
 		;;
-	backup:$option)
-		echo backuping $option
+	ps)
+		/opt/git2docker/git2docker-cli -ps
 		;;
+	"start $APP")
+                /opt/git2docker/git2docker-cli -start --name=$APP
+                ;;
+	"stop $APP")
+                /opt/git2docker/git2docker-cli -stop --name=$APP
+                ;;
+	"delete $APP")
+                /opt/git2docker/git2docker-cli -remove --name=$APP
+                ;;
+	"remove $APP")
+                /opt/git2docker/git2docker-cli -remove --name=$APP
+                ;;
 	*)
 		echo "Access Denied!!"
 		;;

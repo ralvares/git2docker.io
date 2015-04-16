@@ -162,7 +162,7 @@ func Dockerbuild(name string, tmpdir string) bool {
 }
 
 func RunDockerbuild(name string, tmpdir string, domain string) {
-	err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + domain + " " + os.Getenv("USER") + "/" + name + ":dockerfile")
+	err := cmd("docker run -i -d -P --restart=always --name=App_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + domain + " " + os.Getenv("USER") + "/" + name + ":dockerfile")
 	if err != true {
 		fmt.Println("Error ---> Starting Docker...")
 
@@ -232,7 +232,7 @@ func Run(name string, tmpdir string, domain string, preexec string) {
 			RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
 		}
 
-		err := cmd("docker run -i -d -P --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + domain + " cooltrick/git2docker:start /bin/bash -c '/start'")
+		err := cmd("docker run -i -d -P --restart=always --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + domain + " cooltrick/git2docker:start /bin/bash -c '/start'")
 		if err != true {
 			fmt.Println("Error ---> Starting Code...")
 

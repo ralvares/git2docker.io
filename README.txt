@@ -286,3 +286,26 @@ systemctl start nginx-proxy.service
 Deploy any app seting domain option in git2docker.conf and try do access.
 
 If you haven't a DNS server, You can add the domain at /etc/hosts
+
+
+For a simple dns server to test:
+
+Install dnsmasq 
+
+zypper install dnsmasq 
+
+If you want use the domain *.git2docker just run:
+
+echo address="/.git2docker/192.168.100.187" >> /etc/dnsmasq.conf
+systemctl enable dnsmasq
+systemctl start dnsmasq
+
+Use the new dns server to test you git2docker
+
+
+nslookup test.git2docker
+Server:              192.168.100.187
+Address:      192.168.100.187#53
+
+Name:  test.git2docker
+Address: 192.168.100.187
