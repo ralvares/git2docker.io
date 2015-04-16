@@ -100,7 +100,7 @@ func List(userhome string) {
 }
 
 func ImageExist(name string) bool {
-	state := cmd("docker inspect App_" + username + "_" + name)
+	state := cmd("docker inspect " + name)
 	if state != true {
 		return false
 	} else {
@@ -109,7 +109,7 @@ func ImageExist(name string) bool {
 }
 
 func ContainerExist(name string) bool {
-	state := cmd("docker inspect App_" + username + "_" + name)
+	state := cmd("docker inspect " + name)
 	if state != true {
 		return false
 	} else {
