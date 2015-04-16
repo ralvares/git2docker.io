@@ -243,7 +243,7 @@ func main() {
 		} else {
 			if _, err := os.Stat(userhome + "/" + *name); err == nil {
 				if strings.HasPrefix(*name, ".") != true {
-					if State(*name) == false {
+					if State(*name) {
 						fmt.Printf("| %-20s\t%10s |\n", *name, "is Already Stoped")
 					} else {
 						if Stop("App_" + username + "_" + *name) {
@@ -279,7 +279,7 @@ func main() {
 		} else {
 			if _, err := os.Stat(userhome + "/" + *name); err == nil {
 
-				if State(*name) == true {
+				if State(*name) {
 					fmt.Printf("| %-20s\t%10s |\n", *name, "is Already UP")
 				} else {
 					if Start("App_" + username + "_" + *name) {
