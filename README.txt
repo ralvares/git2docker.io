@@ -309,3 +309,37 @@ Address:      192.168.100.187#53
 
 Name:  test.git2docker
 Address: 192.168.100.187
+
+Cli Option:
+
+ex:
+
+ssh user@X.X.X.X ps
+
+Listing Containers.
+
+@linux:/tmp/> ssh demo@192.168.100.187 ps
+| apache-demo                    is Up |
+
+Stoping Containers.
+
+ssh user@X.X.X.X stop apache-demo
+
+@linux:/tmp/> ssh demo@192.168.100.187 ps
+| apache-demo                   Stoped |
+
+
+Starting Containers.
+
+ssh user@X.X.X.X start apache-demo
+| apache-demo                  Started |
+
+
+Deleting Containers.
+
+ssh user@X.X.X.X delete apache-demo
+Please type yes or no and then press enter:
+yes
+| apache-demo                  Deleted |
+
+

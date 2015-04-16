@@ -160,6 +160,7 @@ func CleanUP(name string) {
 		os.RemoveAll(userhome + "/" + name)
 
 	}
+	fmt.Printf("| %-20s\t%10s |\n", name, "Deleted")
 }
 
 func posString(slice []string, element string) int {
@@ -244,7 +245,7 @@ func main() {
 			if _, err := os.Stat(userhome + "/" + *name); err == nil {
 				if strings.HasPrefix(*name, ".") != true {
 					if State(*name) {
-						fmt.Printf("| %-20s\t%10s |\n", *name, "is Already Stoped")
+						fmt.Printf("| %-20s\t%10s |\n", *name, "Already Stoped")
 					} else {
 						if Stop("App_" + username + "_" + *name) {
 							fmt.Printf("| %-20s\t%10s |\n", *name, "Stoped")
