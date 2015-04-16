@@ -17,11 +17,18 @@ case "$SSH_ORIGINAL_COMMAND" in
                 /opt/git2docker/git2docker-cli -stop --name=$APP
                 ;;
 	"delete $APP")
-                /opt/git2docker/git2docker-cli -remove --name=$APP
+  					/opt/git2docker/git2docker-cli -remove --name=$APP
                 ;;
 	"remove $APP")
-                /opt/git2docker/git2docker-cli -remove --name=$APP
+                
+  					/opt/git2docker/git2docker-cli -remove --name=$APP
+			
                 ;;
+     "logs $APP")
+                
+  					/opt/git2docker/git2docker-cli -logs --name=$APP
+			
+                ;;           
 	*)
 		echo "Access Denied!!"
 		;;

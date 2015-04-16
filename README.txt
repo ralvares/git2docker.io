@@ -310,7 +310,7 @@ Address:      192.168.100.187#53
 Name:  test.git2docker
 Address: 192.168.100.187
 
-Cli Option:
+SSH - Cli Option:
 
 ex:
 
@@ -342,4 +342,12 @@ Please type yes or no and then press enter:
 yes
 | apache-demo                  Deleted |
 
+
+Linux Cli Option
+
+mkdir ~/.git2docker
+
+create a file ~/.git2docker/git2docker.conf:
+user=user
+host=X.X.X.X
 

@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -69,7 +68,7 @@ func Start(name string) bool {
 }
 
 func Logs(name string) {
-	err := cmdout("docker logs -f " + name)
+	err := cmdout("docker logs --tail=1000 " + name)
 	if err != true {
 		fmt.Println("Error ---> Showing Logs Docker...")
 
@@ -163,38 +162,6 @@ func CleanUP(name string) {
 	fmt.Printf("| %-20s\t%10s |\n", name, "Deleted")
 }
 
-func posString(slice []string, element string) int {
-	for index, elem := range slice {
-		if elem == element {
-			return index
-		}
-	}
-	return -1
-}
-
-func containsString(slice []string, element string) bool {
-	return !(posString(slice, element) == -1)
-}
-
-func askForConfirmation() bool {
-	fmt.Println("Please type yes or no and then press enter:")
-	var response string
-	_, err := fmt.Scanln(&response)
-	if err != nil {
-		log.Fatal(err)
-	}
-	okayResponses := []string{"y", "Y", "yes", "Yes", "YES"}
-	nokayResponses := []string{"n", "N", "no", "No", "NO"}
-	if containsString(okayResponses, response) {
-		return true
-	} else if containsString(nokayResponses, response) {
-		return false
-	} else {
-		fmt.Println("Please type yes or no and then press enter:")
-		return askForConfirmation()
-	}
-}
-
 func main() {
 	flag.Parse()
 
@@ -222,7 +189,7 @@ func main() {
 			flag.Usage()
 			return
 		} else {
-			fmt.Println("logs")
+			Logs("App_" + username + "_" + *name)
 			return
 		}
 	}
@@ -264,9 +231,7 @@ func main() {
 			return
 		} else {
 			if _, err := os.Stat(userhome + "/" + *name); err == nil {
-				if askForConfirmation() {
-					CleanUP(*name)
-				}
+				CleanUP(*name)
 			} else {
 				fmt.Println("App not Found.")
 			}
