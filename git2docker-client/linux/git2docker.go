@@ -151,7 +151,7 @@ func main() {
 
 	}
 
-	if *logs {
+	if *log {
 		if len(*name) <= 0 {
 			flag.Usage()
 			return

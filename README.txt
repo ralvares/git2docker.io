@@ -351,3 +351,29 @@ create a file ~/.git2docker/git2docker.conf:
 user=user
 host=X.X.X.X
 
+cd ~/
+curl https://github.com/cooltrick/git2docker.io/raw/master/git2docker-client/linux/git2docker
+chmod +x git2docker
+
+./git2docker -ps
+| apache-demo                    is Up |
+
+./git2docker -stop --name=apache-demo
+| apache-demo                   Stoped |
+
+./git2docker -start --name=apache-demo
+| apache-demo                  Started |
+
+./git2docker -logs --name=apache-demo
+172.17.0.3 - - [16/Apr/2015:15:08:45 +0000] "GET / HTTP/1.1" 200 22698 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36"
+172.17.0.3 - - [16/Apr/2015:15:08:46 +0000] "GET / HTTP/1.1" 200 22700 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36"
+172.17.0.3 - - [16/Apr/2015:15:13:31 +0000] "GET / HTTP/1.1" 200 22702 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36"
+172.17.0.3 - - [16/Apr/2015:15:13:32 +0000] "GET / HTTP/1.1" 200 22698 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36"
+172.17.0.3 - - [16/Apr/2015:15:13:32 +0000] "GET / HTTP/1.1" 200 22702 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36"
+172.17.0.3 - - [16/Apr/2015:15:13:32 +0000] "GET / HTTP/1.1" 200 22698 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36"
+172.17.0.3 - - [16/Apr/2015:15:13:33 +0000] "GET / HTTP/1.1" 200 22697 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36"
+
+./git2docker -remove --name=apache-demo
+Please type yes or no and then press enter:
+yes
+| apache-demo                  Deleted |
