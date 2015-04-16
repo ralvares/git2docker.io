@@ -1,5 +1,6 @@
 all:
 	go build receiver.go 
+	go build git2docker-cli.go 
 
 install:
 	mkdir /opt/git2docker
