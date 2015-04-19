@@ -214,7 +214,9 @@ To demo@localhost:node-js-sample
 Hello World!
 ```
 
-###Deploy - Dockerfile
+###Deploy - Using a Dockerfile
+
+We will deploy a Apache(httpd) example application.
 
 ```
 mkdir apache-demo
@@ -262,6 +264,7 @@ It works!
 ###Manage Containers - Git Client
 
 - Deleting:
+
 ```
 echo state=remove > git2docker.conf
 git add --all
@@ -271,6 +274,7 @@ git push git2docker master
 ```
 
 - Stoping:
+
 ```
 echo state=stop > git2docker.conf
 git add --all
@@ -280,6 +284,7 @@ git push git2docker master
 ```
 
 - Starting:
+
 ```
 echo state=start > git2docker.conf
 git add --all
@@ -289,6 +294,7 @@ git push git2docker master
 ```
 
 - Logs:
+
 ```
 echo state=logs > git2docker.conf
 git add --all
@@ -305,6 +311,7 @@ chmod +x git2docker
 ```
 
 - Listing:
+
 ```
 
 ./git2docker -ps
@@ -312,6 +319,7 @@ chmod +x git2docker
 ```
 
 - Stopting:
+
 ```
 
 ./git2docker -stop --name=apache-demo
@@ -319,6 +327,7 @@ chmod +x git2docker
 ```
 
 - Starting:
+
 ```
 
 ./git2docker -start --name=apache-demo
@@ -326,6 +335,7 @@ chmod +x git2docker
 ```
 
 - Logs:
+
 ```
 
 ./git2docker -logs --name=apache-demo
@@ -338,6 +348,7 @@ chmod +x git2docker
 ```
 
 - Deleting:
+
 ```
 ./git2docker -remove --name=apache-demo
 Please type yes or no and then press enter: yes
@@ -372,10 +383,11 @@ EOF
 ```
 
  - Enable and Start service:
- ```
+
+```
 systemctl enable /etc/systemd/system/nginx-proxy.service
 systemctl start nginx-proxy.service
- ```
+```
 
 Deploy any Container setting domain option in git2docker.conf and test.
 
