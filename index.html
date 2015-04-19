@@ -256,7 +256,9 @@ Hello World!
 </code></pre>
 
 <h3>
-<a id="deploy---dockerfile" class="anchor" href="#deploy---dockerfile" aria-hidden="true"><span class="octicon octicon-link"></span></a>Deploy - Dockerfile</h3>
+<a id="deploy---using-a-dockerfile" class="anchor" href="#deploy---using-a-dockerfile" aria-hidden="true"><span class="octicon octicon-link"></span></a>Deploy - Using a Dockerfile</h3>
+
+<p>We will deploy a Apache(httpd) example application.</p>
 
 <pre><code>mkdir apache-demo
 cd apache-demo
@@ -437,13 +439,12 @@ EOF
 </code></pre>
 
 <ul>
-<li>Enable and Start service:
-<code>
-systemctl enable /etc/systemd/system/nginx-proxy.service
-systemctl start nginx-proxy.service
-</code>
-</li>
+<li>Enable and Start service:</li>
 </ul>
+
+<pre><code>systemctl enable /etc/systemd/system/nginx-proxy.service
+systemctl start nginx-proxy.service
+</code></pre>
 
 <p>Deploy any Container setting domain option in git2docker.conf and test.</p>
 
