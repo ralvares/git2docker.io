@@ -20,7 +20,7 @@ _Disable the Firewall_.
 curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/install.sh | sh
 ```
 
-- Installing using the Source.
+- Installing from Source.
 
 ```
 zypper install go
@@ -65,7 +65,7 @@ EOF
 
 ```
 
-- Installing g2docker cli using the Source.
+- Installing g2docker cli from Source.
 
 ```
 zypper install go
