@@ -49,9 +49,28 @@ systemctl start sshd
 
 <p><em>Disable the Firewall</em>.</p>
 
-<p>Installing - Git2Docker</p>
+<ul>
+<li>Installing - Git2Docker</li>
+</ul>
 
 <pre><code>curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/install.sh | sh
+</code></pre>
+
+<ul>
+<li>Installing from Source.</li>
+</ul>
+
+<pre><code>zypper install go
+
+git clone https://github.com/cooltrick/git2docker.io.git
+cd git2docker.io
+make
+sudo make install
+
+docker pull cooltrick/git2docker
+docker pull cooltrick/git2docker:start
+docker pull busybox
+docker pull cooltrick/nginx-proxy
 </code></pre>
 
 <ul>
@@ -73,17 +92,30 @@ cat ~/.git2docker/id_rsa.pub | ssh user@192.168.100.56 git2docker
 </code></pre>
 
 <ul>
-<li>Downloading and installing the git2docker-cli.</li>
+<li>Downloading and installing the g2docker cli.</li>
 </ul>
 
-<pre><code>curl https://github.com/cooltrick/git2docker.io/raw/master/git2docker-client/linux/git2docker
-chmod +x git2docker
+<pre><code>curl https://github.com/cooltrick/git2docker.io/raw/master/git2docker-client/linux/g2docker
+chmod +x g2docker
 
 cat &gt;  ~/.git2docker/git2docker.conf &lt;&lt;EOF
 user=user
 host=192.168.100.56
 EOF
 
+</code></pre>
+
+<ul>
+<li>Installing g2docker cli from Source.</li>
+</ul>
+
+<pre><code>zypper install go
+
+git clone https://github.com/cooltrick/git2docker.io.git
+cd git2docker.io/git2docker-client/linux
+make
+chmod +x g2docker
+cp -rf g2docker /usr/local/bin
 </code></pre>
 
 <h3>
@@ -352,17 +384,12 @@ git push git2docker master
 <h3>
 <a id="manage-containers---git2docker-cli-client" class="anchor" href="#manage-containers---git2docker-cli-client" aria-hidden="true"><span class="octicon octicon-link"></span></a>Manage Containers - Git2Docker-CLI Client</h3>
 
-<pre><code>
-curl https://github.com/cooltrick/git2docker.io/raw/master/git2docker-client/linux/git2docker
-chmod +x git2docker
-</code></pre>
-
 <ul>
 <li>Listing:</li>
 </ul>
 
 <pre><code>
-./git2docker -ps
+./g2docker -ps
 | apache-demo                    is Up |
 </code></pre>
 
@@ -371,7 +398,7 @@ chmod +x git2docker
 </ul>
 
 <pre><code>
-./git2docker -stop --name=apache-demo
+./g2docker -stop --name=apache-demo
 | apache-demo                   Stoped |
 </code></pre>
 
@@ -380,7 +407,7 @@ chmod +x git2docker
 </ul>
 
 <pre><code>
-./git2docker -start --name=apache-demo
+./g2docker -start --name=apache-demo
 | apache-demo                  Started |
 </code></pre>
 
@@ -389,7 +416,7 @@ chmod +x git2docker
 </ul>
 
 <pre><code>
-./git2docker -logs --name=apache-demo
+./g2docker -logs --name=apache-demo
 172.17.0.3 - - [16/Apr/2015:15:08:45 +0000] "GET / HTTP/1.1" 200 22698 "-" "
 172.17.0.3 - - [16/Apr/2015:15:08:45 +0000] "GET / HTTP/1.1" 200 22698 "-" "
 172.17.0.3 - - [16/Apr/2015:15:08:45 +0000] "GET / HTTP/1.1" 200 22698 "-" "
@@ -402,7 +429,7 @@ chmod +x git2docker
 <li>Deleting:</li>
 </ul>
 
-<pre><code>./git2docker -remove --name=apache-demo
+<pre><code>./g2docker -remove --name=apache-demo
 Please type yes or no and then press enter: yes
 | apache-demo                  Deleted |
 </code></pre>
@@ -430,8 +457,8 @@ Requires=docker.service
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker kill nginx-proxy
 ExecStartPre=-/usr/bin/docker rm nginx-proxy
-ExecStartPre=/usr/bin/docker pull jwilder/nginx-proxy
-ExecStart=/usr/bin/docker run -d --name=nginx-proxy -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock jwilder/nginx-proxy
+ExecStartPre=/usr/bin/docker pull cooltrick/nginx-proxy
+ExecStart=/usr/bin/docker run -d --name=nginx-proxy -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock cooltrick/nginx-proxy
 
 [Install]
 WantedBy=multi-user.target
