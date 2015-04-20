@@ -1,2 +1,2 @@
 all:
-	go build git2docker.go 
+	go build -o g2docker git2docker.go 

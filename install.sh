@@ -3,7 +3,7 @@
 docker pull cooltrick/git2docker
 docker pull cooltrick/git2docker:start
 docker pull busybox
-docker pull jwilder/nginx-proxy
+docker pull cooltrick/nginx-proxy
 
 mkdir /opt/git2docker
 curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/gitreceive -o /opt/git2docker/gitreceive
