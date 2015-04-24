@@ -174,14 +174,14 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 		if utils.CheckDatabase(n.Database) {
 			fmt.Println(n.Database)
 		} else {
-			fmt.Println("DB nao existe")
+			fmt.Println("Database Plugin: Don't Exist")
 		}
 	}
 
 	if n.Dockerfile {
 		if utils.Dockerbuild(appname, tmpdir) {
 			if n.Cache != true {
-				fmt.Println("Cleaning TMP_DIR")
+				fmt.Println("Cleaning Cache")
 				os.RemoveAll(tmpdir)
 			}
 			utils.RunDockerbuild(appname, tmpdir, n.Domain)
@@ -216,14 +216,14 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 		if utils.CommitSource(appname, tmpdir) {
 			if utils.Build(appname, tmpdir) {
 				utils.Run(appname, tmpdir, n.Domain, n.Preexec)
-				utils.Logs(appname)
+				utils.Logs("App_" + username + "_" + appname)
 			}
 		}
 	}
 
 	if n.State == "logs" {
 		if utils.State("App_" + username + "_" + appname) {
-			utils.Logs(appname)
+			utils.Logs("App_" + username + "_" + appname)
 		} else {
 			fmt.Println("APP don't exist...")
 		}
@@ -234,6 +234,10 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 		utils.CleanUP(appname)
 
 		fmt.Println("App - " + appname + " - Removed")
+	}
+
+	if n.State == "env" {
+		utils.GetEnv("App_" + username + "_" + appname)
 	}
 
 	if n.State == "stop" {
@@ -258,7 +262,7 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 		} else {
 			utils.Start(utils.GetCid(appname))
 			fmt.Println("App - " + appname + " - Started")
-			utils.Logs(appname)
+			utils.Logs("App_" + username + "_" + appname)
 		}
 	}
 }

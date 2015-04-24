@@ -2,8 +2,15 @@ package utils
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
+)
+
+var (
+	userhome string = os.Getenv("HOME")
+	username string = os.Getenv("USER")
 )
 
 func Createlock(dirname string) bool {
@@ -191,24 +198,28 @@ func RemoveImages(name string) {
 	}
 }
 
-func Stop(name string) {
+func Stop(name string) bool {
 	err := cmd("docker stop " + name)
 	if err != true {
 		fmt.Println("Error ---> Stoping Container Docker...")
-
+		return false
+	} else {
+		return true
 	}
 }
 
-func Start(name string) {
+func Start(name string) bool {
 	err := cmd("docker start " + name)
 	if err != true {
 		fmt.Println("Error ---> Starting Container Docker...")
-
+		return false
+	} else {
+		return true
 	}
 }
 
 func Logs(name string) {
-	err := cmdout("docker logs -f App_" + os.Getenv("USER") + "_" + name)
+	err := cmdout("docker logs --tail=1000 " + name)
 	if err != true {
 		fmt.Println("Error ---> Showing Logs Docker...")
 
@@ -243,8 +254,17 @@ func Run(name string, tmpdir string, domain string, preexec string) {
 	}
 }
 
-func State(name string) bool {
+/*func State(name string) bool {
 	state := cmd("docker inspect --format '{{ .State.Running }}' " + name)
+	if state == true {
+		return true
+	} else {
+		return false
+	}
+}*/
+
+func State(name string) bool {
+	state := cmd("docker inspect --format '{{ .State.Running }}' " + name + " | grep -i true")
 	if state == true {
 		return true
 	} else {
@@ -280,8 +300,30 @@ func Ports(name string) string {
 	}
 }
 
+func GetEnv(name string) {
+	err := cmdout("docker exec " + name + " env | grep -v root")
+	if err != true {
+		fmt.Println("Error ---> Container is Down")
+	}
+}
+
+func List(userhome string) {
+	files, _ := ioutil.ReadDir(userhome)
+	for _, f := range files {
+		if f.IsDir() {
+			if strings.HasPrefix(f.Name(), ".") != true {
+				if State("App_"+username+"_"+f.Name()) != true {
+					fmt.Printf("| %-20s\t%10s |\n", f.Name(), "is Down")
+				} else {
+					fmt.Printf("| %-20s\t%10s |\n", f.Name(), "is Up")
+				}
+			}
+		}
+	}
+}
+
 func CheckDatabase(name string) bool {
-	if _, err := os.Stat("/opt/git2docker-databases/" + name); err == nil {
+	if _, err := os.Stat("/opt/git2docker/databases/" + name); err == nil {
 		return true
 	} else {
 		return false

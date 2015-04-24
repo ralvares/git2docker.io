@@ -6,10 +6,16 @@ docker pull busybox
 docker pull cooltrick/nginx-proxy
 
 mkdir /opt/git2docker
-curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/gitreceive -o /opt/git2docker/gitreceive
-curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/git2docker-ssh -o /opt/git2docker/git2docker-ssh
+mkdir /opt/git2docker/databases/
+touch /opt/git2docker/databases/mysql:5.5
+touch /opt/git2docker/databases/mysql:5.6
+touch /opt/git2docker/databases/redis
+touch /opt/git2docker/databases/postgresql
+
+curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/git2docker.io -o /opt/git2docker/git2docker.io
 curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/git2docker -o /opt/git2docker/git2docker
-curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/receiver -o /opt/git2docker/receiver
-curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/git2docker-cli -o /opt/git2docker/git2docker-cli
-ln -s /opt/git2docker/git2docker /usr/bin/git2docker
+ln -s /opt/git2docker/git2docker.io /opt/git2docker/receiver
+ln -s /opt/git2docker/git2docker.io /opt/git2docker/git2docker-cli
+ln -s /opt/git2docker/git2docker.io /opt/git2docker/gitreceive
+ln -s /opt/git2docker/git2docker.io /usr/bin/git2docker
 chmod +x /opt/git2docker/*

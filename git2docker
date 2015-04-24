@@ -1,14 +1,34 @@
-GITUSER=${GITUSER:-`id -un`}
-GITHOME="/home/$GITUSER"
-SELF="/opt/git2docker/git2docker-ssh"
-
-
-if [ ! -d $GITHOME/.ssh ] ; then mkdir -p $GITHOME/.ssh;     fi
-if [ ! -f $GITHOME/.ssh/authorized_keys ] ; then touch $GITHOME/.ssh/authorized_keys;     fi
-chown -R $GITUSER $GITHOME
-KEY=$(cat)
-FINGERPRINT=$(ssh-keygen -lf /dev/stdin <<< $(echo $KEY) | awk '{print $2}')
-AUTHORIZED_KEYS=$GITHOME/.ssh/authorized_keys
-KEY_PREFIX="command=\"$SELF run $GITUSER $FINGERPRINT\",no-agent-forwarding,no-pty,no-user-rc,no-X11-forwarding,no-port-forwarding"
-echo "$KEY_PREFIX $KEY" >> $AUTHORIZED_KEYS
-echo $FINGERPRINT
+#!/bin/sh
+export APP="$(echo $SSH_ORIGINAL_COMMAND | awk '{print $2}' | perl -pe 's/(?<!\\)'\''//g' | sed 's/\\'\''/'\''/g')"
+case "$SSH_ORIGINAL_COMMAND" in
+	"git2docker")
+		/usr/bin/git2docker
+		;;
+	git-*)
+		/opt/git2docker/gitreceive $1 $2 $3
+		;;
+	ps)
+		/opt/git2docker/git2docker-cli -ps
+		;;
+	"start $APP")
+                /opt/git2docker/git2docker-cli -start --name=$APP
+                ;;
+	"stop $APP")
+                /opt/git2docker/git2docker-cli -stop --name=$APP
+                ;;
+	"delete $APP")
+  				/opt/git2docker/git2docker-cli -remove --name=$APP
+                ;;
+	"remove $APP")
+                /opt/git2docker/git2docker-cli -remove --name=$APP
+				;;
+    "logs $APP")
+                /opt/git2docker/git2docker-cli -logs --name=$APP
+				;;
+    "env $APP")
+                /opt/git2docker/git2docker-cli -env --name=$APP
+				;;        
+	*)
+		echo "Access Denied!!"
+		;;
+esac

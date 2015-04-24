@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	env         = flag.Bool("env", false, "Environment of application")
 	remove      = flag.Bool("remove", false, "Remove application")
 	start       = flag.Bool("start", false, "Starting application")
 	scale       = flag.Int("scale", 1, "-scale=X")
@@ -157,6 +158,23 @@ func main() {
 			return
 		} else {
 			response, err := ssh.Run("logs " + *name)
+			// Handle errors
+			if err != nil {
+				panic("Can't run remote command: " + err.Error())
+			} else {
+				fmt.Println(response)
+			}
+
+		}
+
+	}
+
+	if *env {
+		if len(*name) <= 0 {
+			flag.Usage()
+			return
+		} else {
+			response, err := ssh.Run("env " + *name)
 			// Handle errors
 			if err != nil {
 				panic("Can't run remote command: " + err.Error())
