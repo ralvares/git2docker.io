@@ -153,6 +153,13 @@ func uploadKey(homeDirectory, gitreceivePath, username string) {
 		os.Exit(1)
 	}
 
+	if _, err := os.Stat(homeDirectory + "/.ssh"); err != nil {
+		if err := os.Mkdir(homeDirectory+"/.ssh", 0700); err != nil {
+			fmt.Printf("failed to create repo directory\n")
+			os.Exit(1)
+		}
+	}
+
 	authorizedKeysFilename := fmt.Sprintf("%s/.ssh/authorized_keys", homeDirectory)
 	authorizedKeys, err := os.OpenFile(authorizedKeysFilename, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0600)
 	if err != nil {
@@ -288,6 +295,7 @@ func hook() {
 			fmt.Printf("push denied - receiver failed to exit cleanly for %s %s", newRev, err)
 			os.Exit(1)
 		}
+
 		if _, err := os.Stat("/tmp/" + gitUser + "_" + receiveRepo + "_conf"); err == nil {
 			os.RemoveAll("/tmp/" + gitUser + "_" + receiveRepo + "_conf")
 		}
@@ -302,7 +310,7 @@ func main() {
 	gitreceivePath := os.Args[0]
 
 	if strings.HasSuffix(gitreceivePath, "git2docker") {
-		uploadKey(gitHome, "/opt/git2docker/git2docker", gitUser)
+		uploadKey(gitHome, "/opt/git2docker/sshcommand", gitUser)
 	}
 
 	if strings.HasSuffix(os.Args[0], "gitreceive") {

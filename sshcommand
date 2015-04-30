@@ -1,5 +1,7 @@
 #!/bin/sh
+
 export APP="$(echo $SSH_ORIGINAL_COMMAND | awk '{print $2}' | perl -pe 's/(?<!\\)'\''//g' | sed 's/\\'\''/'\''/g')"
+
 case "$SSH_ORIGINAL_COMMAND" in
 	"git2docker")
 		/usr/bin/git2docker

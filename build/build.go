@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 type Git2Dockerconf struct {
@@ -14,13 +15,17 @@ type Git2Dockerconf struct {
 	State      string
 	Preexec    string
 	Git        string
-	Database   string
+	Database   bool
 	Dockerfile bool
 	Port       string
 	Cache      bool
+	login      string
+	database   string
+	password   string
+	image      string
 }
 
-func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (string, string, string, string, string, bool, string, bool) {
+func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (string, string, string, string, bool, bool, string, bool, string, string, string, string) {
 
 	os.RemoveAll(tmpdir)
 	os.RemoveAll(tmpdir + "_conf")
@@ -87,10 +92,6 @@ func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (strin
 			n.Domain = v
 		}
 
-		if k == "database" {
-			n.Database = v
-		}
-
 		if k == "git" {
 			n.Git = v
 		}
@@ -104,8 +105,36 @@ func (n *Git2Dockerconf) GetInfos(name string, tmpdir string, rev string) (strin
 		}
 
 	}
+
+	if _, err := os.Stat(tmpdir + "_conf/git2docker_db.conf"); err == nil {
+		myconf := make(map[string]string)
+		err := cfg.Load(tmpdir+"_conf/git2docker_db.conf", myconf)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for k, v := range myconf {
+
+			if k == "user" {
+				n.login = v
+			}
+
+			if k == "password" {
+				n.password = v
+			}
+
+			if k == "database" {
+				n.database = v
+			}
+
+			if k == "image" {
+				n.image = v
+
+			}
+		}
+	}
 	//os.RemoveAll(os.TempDir() + "/" + os.Getenv("USER") + "_" + name + "_git2docker.conf")
-	return n.Domain, n.State, n.Preexec, n.Git, n.Database, n.Dockerfile, n.Port, n.Cache
+	return n.Domain, n.State, n.Preexec, n.Git, n.Database, n.Dockerfile, n.Port, n.Cache, n.image, n.database, n.login, n.password
 }
 
 func BuildImage(name string, tmpdir string, userhome string, username string, rev string) {
@@ -170,11 +199,59 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 		n.Dockerfile = false
 	}
 
-	if len(n.Database) > 0 {
-		if utils.CheckDatabase(n.Database) {
-			fmt.Println(n.Database)
-		} else {
-			fmt.Println("Database Plugin: Don't Exist")
+	if _, err := os.Stat(tmpdir + "/git2docker_db.conf"); err == nil {
+		if strings.HasSuffix(n.State, "rebuild") {
+			if utils.State("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
+				utils.Stop("DatabaseApp_" + os.Getenv("USER") + "_" + appname)
+			}
+
+			if utils.ContainerExist("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
+				utils.RemoveContainer("DatabaseApp_" + os.Getenv("USER") + "_" + appname)
+			}
+		}
+
+		if strings.HasPrefix(n.image, "redis") {
+			if utils.State("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
+				fmt.Println("Checking DataBase ...")
+			} else {
+				fmt.Println("Creating Database -> Redis ...")
+				if utils.CreateDB(appname, n.image, "", "", "") {
+					n.Database = true
+				}
+			}
+		}
+
+		if strings.HasPrefix(n.image, "mysql") {
+
+			if utils.State("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
+				fmt.Println("Checking DataBase ...")
+			} else {
+				fmt.Println("Creating Database - > Mysql ...")
+				fmt.Println(os.Getenv("dbuser") + " " + os.Getenv("password") + " " + os.Getenv("dbname"))
+				if utils.CreateDB(appname, n.image, n.login, n.password, n.database) {
+					if _, err := os.Stat(tmpdir + "/git2docker.sql"); err == nil {
+						var dbcheck bool
+						fmt.Println("Waiting for " + n.database + " ...")
+						fmt.Println("Press CTRL+C to Cancel")
+						for dbcheck != true {
+							dbcheck = utils.CMD("docker exec -i DatabaseApp_" + os.Getenv("USER") + "_" + appname + " mysqlshow -u" + n.login + " -p" + n.password + " " + n.database + " > /dev/null 2>&1 && true")
+						}
+						utils.CMD("docker exec -i DatabaseApp_" + os.Getenv("USER") + "_" + appname + " mysql -u" + n.login + " -p" + n.password + " " + n.database + " < " + tmpdir + "/git2docker.sql")
+					}
+					n.Database = true
+					os.RemoveAll(tmpdir + "/git2docker.sql")
+					os.RemoveAll(tmpdir + "/git2docker_db.conf")
+				}
+			}
+		}
+	} else {
+
+		if utils.State("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
+			utils.Stop("DatabaseApp_" + os.Getenv("USER") + "_" + appname)
+		}
+
+		if utils.ContainerExist("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
+			utils.RemoveContainer("DatabaseApp_" + os.Getenv("USER") + "_" + appname)
 		}
 	}
 
@@ -188,24 +265,33 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 		}
 	}
 
-	if n.State == "dockerfile" || n.State == "Dockerfile" {
+	if n.State == "dockerfile" || n.State == "Dockerfile" || n.State == "dockerfile:rebuild" || n.State == "Dockerfile:rebuild" {
 		n.Dockerfile = true
 		if n.Dockerfile {
 			if utils.Dockerbuild(appname, tmpdir) {
 				if n.Cache != true {
 					os.RemoveAll(tmpdir)
 				}
-				utils.RunDockerbuild(appname, tmpdir, n.Domain)
+				if n.Database {
+					utils.RunDockerbuildwithDB(appname, tmpdir, n.Domain)
+				} else {
+					utils.RunDockerbuild(appname, tmpdir, n.Domain)
+				}
 			}
 		}
 	}
 
-	if n.State == "build" {
+	if n.State == "build" || n.State == "build:rebuild" {
 		os.RemoveAll(tmpdir + "/Dockerfile")
 		os.RemoveAll(tmpdir + "/git2docker.conf")
+		os.RemoveAll(tmpdir + "/git2docker_db.conf")
 		if utils.CommitSource(appname, tmpdir) {
 			if utils.Build(appname, tmpdir) {
-				utils.Run(appname, tmpdir, n.Domain, n.Preexec)
+				if n.Database {
+					utils.RunwithDB(appname, tmpdir, n.Domain, n.Preexec)
+				} else {
+					utils.Run(appname, tmpdir, n.Domain, n.Preexec)
+				}
 			}
 		}
 	}
@@ -213,10 +299,17 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 	if n.State == "build:logs" {
 		os.RemoveAll(tmpdir + "/Dockerfile")
 		os.RemoveAll(tmpdir + "/git2docker.conf")
+		os.RemoveAll(tmpdir + "/git2docker_db.conf")
 		if utils.CommitSource(appname, tmpdir) {
 			if utils.Build(appname, tmpdir) {
-				utils.Run(appname, tmpdir, n.Domain, n.Preexec)
-				utils.Logs("App_" + username + "_" + appname)
+				if n.Database {
+					utils.RunwithDB(appname, tmpdir, n.Domain, n.Preexec)
+					utils.Logs("App_" + username + "_" + appname)
+				} else {
+					utils.Run(appname, tmpdir, n.Domain, n.Preexec)
+					utils.Logs("App_" + username + "_" + appname)
+				}
+
 			}
 		}
 	}

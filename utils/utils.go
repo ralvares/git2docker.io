@@ -75,6 +75,19 @@ func cmd(command string) bool {
 	}
 }
 
+func CMD(command string) bool {
+	cmd := exec.Command("bash", "-c", command)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		return false
+		panic(err)
+	} else {
+		return true
+	}
+}
+
 func Build(name string, tmpdir string) bool {
 
 	if State("App_" + os.Getenv("USER") + "_" + name) {
@@ -172,9 +185,26 @@ func RunDockerbuild(name string, tmpdir string, domain string) {
 	err := cmd("docker run -i -d -P --restart=always --name=App_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + domain + " " + os.Getenv("USER") + "/" + name + ":dockerfile")
 	if err != true {
 		fmt.Println("Error ---> Starting Docker...")
-
+		RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
 	} else {
 		fmt.Println(name + " Started")
+		fmt.Println("Access: http://" + domain + " or Port: " + Ports(name))
+
+	}
+}
+
+func RunDockerbuildwithDB(name string, tmpdir string, domain string) {
+	err := cmd("docker run -i -d -P --restart=always --name=App_" + os.Getenv("USER") + "_" + name + " --link DatabaseApp_" + os.Getenv("USER") + "_" + name + ":database" + " -e VIRTUAL_HOST=" + domain + " " + os.Getenv("USER") + "/" + name + ":dockerfile")
+	if err != true {
+		fmt.Println("Error ---> Starting Docker...")
+		RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
+	} else {
+		fmt.Println(name + " Started")
+		fmt.Println("")
+		fmt.Println("Printing Database Informations:")
+		fmt.Println("")
+		GetEnv("App_" + os.Getenv("USER") + "_" + name)
+		fmt.Println("")
 		fmt.Println("Access: http://" + domain + " or Port: " + Ports(name))
 
 	}
@@ -242,8 +272,40 @@ func Run(name string, tmpdir string, domain string, preexec string) {
 		if ContainerExist("App_" + os.Getenv("USER") + "_" + name) {
 			RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
 		}
-
 		err := cmd("docker run -i -d -P --restart=always --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + domain + " cooltrick/git2docker:start /bin/bash -c '/start'")
+		if err != true {
+			fmt.Println("Error ---> Starting Code...")
+			RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
+		} else {
+			fmt.Println(name + " Started")
+			fmt.Println("")
+			fmt.Println("Printing Database Informations:")
+			fmt.Println("")
+			GetEnv("App_" + os.Getenv("USER") + "_" + name)
+			fmt.Println("")
+			fmt.Println("Access: http://" + domain + " or Port: " + Ports(name))
+
+		}
+	}
+}
+
+func RunwithDB(name string, tmpdir string, domain string, preexec string) {
+	if len(preexec) < 0 {
+		preexec = "echo OK"
+	}
+	errPre := cmd("docker run -i --rm --name=App_" + os.Getenv("USER") + "_" + name + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " cooltrick/git2docker:start /bin/bash -c '/preexec " + preexec + "'")
+	if errPre != true {
+		fmt.Println("Error ---> Starting Pre-Exec...")
+
+	} else {
+		if State("App_" + os.Getenv("USER") + "_" + name) {
+			Stop("App_" + os.Getenv("USER") + "_" + name)
+		}
+
+		if ContainerExist("App_" + os.Getenv("USER") + "_" + name) {
+			RemoveContainer("App_" + os.Getenv("USER") + "_" + name)
+		}
+		err := cmd("docker run -i -d -P --restart=always --name=App_" + os.Getenv("USER") + "_" + name + " --link DatabaseApp_" + os.Getenv("USER") + "_" + name + ":database" + " --volumes-from=StorageApp_" + os.Getenv("USER") + "_" + name + " -e VIRTUAL_HOST=" + domain + " cooltrick/git2docker:start /bin/bash -c '/start'")
 		if err != true {
 			fmt.Println("Error ---> Starting Code...")
 
@@ -252,6 +314,42 @@ func Run(name string, tmpdir string, domain string, preexec string) {
 			fmt.Println("Access: http://" + domain + " or Port: " + Ports(name))
 		}
 	}
+}
+
+func CreateDB(name string, image string, login string, pass string, dbname string) bool {
+	if State("DatabaseApp_" + os.Getenv("USER") + "_" + name) {
+		Stop("DatabaseApp_" + os.Getenv("USER") + "_" + name)
+	}
+
+	if ContainerExist("DatabaseApp_" + os.Getenv("USER") + "_" + name) {
+		RemoveContainer("DatabaseApp_" + os.Getenv("USER") + "_" + name)
+	}
+
+	if strings.HasPrefix(image, "redis") {
+		err := cmd("docker run -i -d --restart=always --name=DatabaseApp_" + os.Getenv("USER") + "_" + name + " " + image)
+		if err != true {
+			fmt.Println("Error ---> Starting Database...")
+			RemoveContainer("DatabaseApp_" + os.Getenv("USER") + "_" + name)
+			return false
+		} else {
+			fmt.Println("DataBase Started")
+			return true
+		}
+	}
+	if strings.HasPrefix(image, "mysql") {
+		err := cmd("docker run -i -d --restart=always --name=DatabaseApp_" + os.Getenv("USER") + "_" + name + " -e MYSQL_ROOT_PASSWORD=" + pass + " -e MYSQL_DATABASE=" + dbname + " -e MYSQL_USER=" + login + " -e MYSQL_PASSWORD=" + pass + " " + image)
+		if err != true {
+			fmt.Println("Error ---> Starting Database...")
+			RemoveContainer("DatabaseApp_" + os.Getenv("USER") + "_" + name)
+			return false
+			os.Exit(1)
+		} else {
+			fmt.Println("DataBase Started")
+			return true
+		}
+	}
+
+	return false
 }
 
 /*func State(name string) bool {
@@ -301,7 +399,7 @@ func Ports(name string) string {
 }
 
 func GetEnv(name string) {
-	err := cmdout("docker exec " + name + " env | grep -v root")
+	err := cmdout("docker exec " + name + " /bin/bash -c export | grep -i database | awk '{print $3}'")
 	if err != true {
 		fmt.Println("Error ---> Container is Down")
 	}
@@ -319,14 +417,6 @@ func List(userhome string) {
 				}
 			}
 		}
-	}
-}
-
-func CheckDatabase(name string) bool {
-	if _, err := os.Stat("/opt/git2docker/databases/" + name); err == nil {
-		return true
-	} else {
-		return false
 	}
 }
 
@@ -349,6 +439,16 @@ func CleanUP(name string) {
 
 	if ImageExist(os.Getenv("USER") + "/" + name + ":dockerfile") {
 		RemoveImages(os.Getenv("USER") + "/" + name + ":dockerfile")
+	}
+
+	if State("DatabaseApp_" + os.Getenv("USER") + "_" + name) {
+		fmt.Println("Stoping Database")
+		Stop("DatabaseApp_" + os.Getenv("USER") + "_" + name)
+	}
+
+	if ContainerExist("DatabaseApp_" + os.Getenv("USER") + "_" + name) {
+		fmt.Println("Deleting Database")
+		RemoveContainer("DatabaseApp_" + os.Getenv("USER") + "_" + name)
 	}
 
 	if _, err := os.Stat(os.Getenv("HOME") + "/" + name); err == nil {
