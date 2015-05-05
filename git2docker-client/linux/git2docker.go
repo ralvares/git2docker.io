@@ -75,7 +75,7 @@ func main() {
 	ssh := &easyssh.MakeConfig{
 		User:   user,
 		Server: host,
-		Key:    "/.git2docker/id_rsa",
+		Key:    "/.ssh/id_rsa",
 		Port:   "22",
 	}
 

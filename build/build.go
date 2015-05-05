@@ -210,51 +210,71 @@ func BuildAppGit(appname string, tmpdir string, userhome string, username string
 			}
 		}
 
-		if strings.HasPrefix(n.image, "redis") {
+		if strings.HasSuffix(n.State, "stop") {
 			if utils.State("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
-				fmt.Println("Checking DataBase ...")
-			} else {
-				fmt.Println("Creating Database -> Redis ...")
-				if utils.CreateDB(appname, n.image, "", "", "") {
-					n.Database = true
-				}
+				utils.Stop("DatabaseApp_" + os.Getenv("USER") + "_" + appname)
 			}
+			if utils.State("App_" + os.Getenv("USER") + "_" + appname) {
+				utils.Stop("App_" + os.Getenv("USER") + "_" + appname)
+			}
+			return
 		}
 
-		if strings.HasPrefix(n.image, "mysql") {
-
-			if utils.State("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
-				fmt.Println("Checking DataBase ...")
-			} else {
-				fmt.Println("Creating Database - > Mysql ...")
-				fmt.Println(os.Getenv("dbuser") + " " + os.Getenv("password") + " " + os.Getenv("dbname"))
-				if utils.CreateDB(appname, n.image, n.login, n.password, n.database) {
-					if _, err := os.Stat(tmpdir + "/git2docker.sql"); err == nil {
-						var dbcheck bool
-						fmt.Println("Waiting for " + n.database + " ...")
-						fmt.Println("Press CTRL+C to Cancel")
-						for dbcheck != true {
-							dbcheck = utils.CMD("docker exec -i DatabaseApp_" + os.Getenv("USER") + "_" + appname + " mysqlshow -u" + n.login + " -p" + n.password + " " + n.database + " > /dev/null 2>&1 && true")
-						}
-						utils.CMD("docker exec -i DatabaseApp_" + os.Getenv("USER") + "_" + appname + " mysql -u" + n.login + " -p" + n.password + " " + n.database + " < " + tmpdir + "/git2docker.sql")
+		if strings.HasSuffix(n.State, "start") {
+			if !utils.State("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
+				utils.Start("DatabaseApp_" + os.Getenv("USER") + "_" + appname)
+			}
+			if !utils.State("App_" + os.Getenv("USER") + "_" + appname) {
+				utils.Start("App_" + os.Getenv("USER") + "_" + appname)
+			}
+			return
+		}
+		if strings.HasSuffix(n.State, "build") || strings.HasSuffix(n.State, "Dockerfile") || strings.HasSuffix(n.State, "dockerfile") {
+			if strings.HasPrefix(n.image, "redis") {
+				if utils.State("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
+					fmt.Println("Checking DataBase ...")
+				} else {
+					fmt.Println("Creating Database -> Redis ...")
+					if utils.CreateDB(appname, n.image, "", "", "") {
+						n.Database = true
 					}
-					n.Database = true
-					os.RemoveAll(tmpdir + "/git2docker.sql")
-					os.RemoveAll(tmpdir + "/git2docker_db.conf")
 				}
 			}
-		}
-	} else {
 
-		if utils.State("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
-			utils.Stop("DatabaseApp_" + os.Getenv("USER") + "_" + appname)
-		}
+			if strings.HasPrefix(n.image, "mysql") {
 
-		if utils.ContainerExist("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
-			utils.RemoveContainer("DatabaseApp_" + os.Getenv("USER") + "_" + appname)
+				if utils.State("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
+					fmt.Println("Checking DataBase ...")
+				} else {
+					fmt.Println("Creating Database - > Mysql ...")
+					fmt.Println(os.Getenv("dbuser") + " " + os.Getenv("password") + " " + os.Getenv("dbname"))
+					if utils.CreateDB(appname, n.image, n.login, n.password, n.database) {
+						if _, err := os.Stat(tmpdir + "/git2docker.sql"); err == nil {
+							var dbcheck bool
+							fmt.Println("Waiting for " + n.database + " ...")
+							fmt.Println("Press CTRL+C to Cancel")
+							for dbcheck != true {
+								dbcheck = utils.CMD("docker exec -i DatabaseApp_" + os.Getenv("USER") + "_" + appname + " mysqlshow -u" + n.login + " -p" + n.password + " " + n.database + " > /dev/null 2>&1 && true")
+							}
+							utils.CMD("docker exec -i DatabaseApp_" + os.Getenv("USER") + "_" + appname + " mysql -u" + n.login + " -p" + n.password + " " + n.database + " < " + tmpdir + "/git2docker.sql")
+						}
+						n.Database = true
+						os.RemoveAll(tmpdir + "/git2docker.sql")
+						os.RemoveAll(tmpdir + "/git2docker_db.conf")
+					}
+				}
+			}
+		} else {
+
+			if utils.State("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
+				utils.Stop("DatabaseApp_" + os.Getenv("USER") + "_" + appname)
+			}
+
+			if utils.ContainerExist("DatabaseApp_" + os.Getenv("USER") + "_" + appname) {
+				utils.RemoveContainer("DatabaseApp_" + os.Getenv("USER") + "_" + appname)
+			}
 		}
 	}
-
 	if n.Dockerfile {
 		if utils.Dockerbuild(appname, tmpdir) {
 			if n.Cache != true {

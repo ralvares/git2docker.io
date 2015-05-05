@@ -1,5 +1,15 @@
 ###﻿Git2Docker – Server
 
+##Objectives:
+
+Git2Docker.io Deploys apps, and manages Containers with best practices right out of the box. Automatically doing all the things that were too complicated, expensive, or time consuming to do manually. And because it's open source.
+
+Git2docker is a software to simplify, you just need a git client, with git2docker you don't need install any other tools, You can Deploy, Delete, Shutdown, Start, View Logs and more.
+
+
+
+
+
 
 - Install
 
@@ -47,15 +57,15 @@ passwd user
 
 ```
 mkdir ~/.git2docker
-ssh-keygen -t dsa
-cp -rf ~/.ssh/id_rsa* ~/.git2docker/
-cat ~/.git2docker/id_rsa.pub | ssh user@192.168.100.56 git2docker
+ssh-keygen
+cp -rf ~/.ssh/id_rsa*
+cat ~/.ssh/id_rsa.pub | ssh user@192.168.100.56 git2docker
 ```
 
  - Downloading and installing the g2docker cli.
 
 ```
-curl https://github.com/cooltrick/git2docker.io/raw/master/git2docker-client/linux/g2docker
+curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/git2docker-client/linux/g2docker -o g2docker
 chmod +x g2docker
 
 cat >  ~/.git2docker/git2docker.conf <<EOF
@@ -397,7 +407,6 @@ Requires=docker.service
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker kill nginx-proxy
 ExecStartPre=-/usr/bin/docker rm nginx-proxy
-ExecStartPre=/usr/bin/docker pull cooltrick/nginx-proxy
 ExecStart=/usr/bin/docker run -d --name=nginx-proxy -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock cooltrick/nginx-proxy
 
 [Install]
@@ -420,4 +429,75 @@ Example of /etc/hosts file:
 ```
 192.168.100.56	apache-demo.git2docker
 192.168.100.56	nodejs.git2docker
+```
+
+##Integration with Databases:
+
+- Suported Databases:
+
+- - Redis
+- - Mysql
+- - Postgresql
+
+##Deploy Database:
+
+To deploy database just create a git2docker_db.conf file.
+
+git2docker_db.conf Examples:
+
+Redis Example:
+
+```
+image=redis
+
+```
+
+Mysql Example:
+
+```
+image=mysql
+user=dbuser
+password=dbpass
+database=dbname
+```
+
+
+Postgresql Example:
+
+```
+image=mysql
+user=dbuser
+password=dbpass
+database=dbname
+```
+
+##Configuring the Application:
+
+Database Server Address aways be "database"
+
+Example:
+
+PHP with Mysql:
+
+```
+<?php
+$servername = "database";
+$username = "dbuser";
+$password = "dbpass";
+$dbname = "dbname";
+
+$link = mysql_connect($servername, $username, $password);
+mysql_select_db($dbname, $link);
+mysql_set_charset('UTF-8', $link);
+
+
+$result = mysql_query('SELECT * from employees') or die(mysql_error());
+ 
+$num_rows = mysql_num_rows($result);
+ 
+while($row = mysql_fetch_assoc($result)) {
+   echo $row['first_name'].' '.$row['last_name']; //etc...
+   echo "<br>";
+}
+?> 
 ```
