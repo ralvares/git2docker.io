@@ -57,7 +57,6 @@ passwd user
 ```
 mkdir ~/.git2docker
 ssh-keygen
-cp -rf ~/.ssh/id_rsa*
 cat ~/.ssh/id_rsa.pub | ssh user@192.168.100.56 git2docker
 ```
 
