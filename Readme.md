@@ -1,15 +1,10 @@
 ###﻿Git2Docker – Server
 
-##Objectives:
+##About:
 
-Git2Docker.io Deploys apps, and manages Containers with best practices right out of the box. Automatically doing all the things that were too complicated, expensive, or time consuming to do manually. And because it's open source.
+Git2Docker.io Deploys apps and manages Containers with best practices right out of the box. Automatically doing all the things that were too complicated, expensive, or time consuming to do manually. And because it's open source.
 
 Git2docker is a software to simplify, you just need a git client, with git2docker you don't need install any other tools, You can Deploy, Delete, Shutdown, Start, View Logs and more.
-
-
-
-
-
 
 - Install
 
@@ -23,6 +18,10 @@ systemctl enable sshd
 systemctl start sshd
 ```
 _Disable the Firewall_.
+
+```
+yast firewall disable
+```
 
 - Installing - Git2Docker
 
@@ -85,6 +84,11 @@ cd git2docker.io/git2docker-client/linux
 make
 chmod +x g2docker
 cp -rf g2docker /usr/local/bin
+
+cat >  ~/.git2docker/git2docker.conf <<EOF
+user=user
+host=192.168.100.56
+EOF
 ```
 
 
@@ -347,7 +351,7 @@ git push git2docker master
 
 ```
 
-./g2docker -ps
+g2docker -ps
 | apache-demo                    is Up |
 ```
 
@@ -355,7 +359,7 @@ git push git2docker master
 
 ```
 
-./g2docker -stop --name=apache-demo
+g2docker -stop --name=apache-demo
 | apache-demo                   Stoped |
 ```
 
@@ -363,7 +367,7 @@ git push git2docker master
 
 ```
 
-./g2docker -start --name=apache-demo
+g2docker -start --name=apache-demo
 | apache-demo                  Started |
 ```
 
@@ -371,7 +375,7 @@ git push git2docker master
 
 ```
 
-./g2docker -logs --name=apache-demo
+g2docker -logs --name=apache-demo
 172.17.0.3 - - [16/Apr/2015:15:08:45 +0000] "GET / HTTP/1.1" 200 22698 "-" "
 172.17.0.3 - - [16/Apr/2015:15:08:45 +0000] "GET / HTTP/1.1" 200 22698 "-" "
 172.17.0.3 - - [16/Apr/2015:15:08:45 +0000] "GET / HTTP/1.1" 200 22698 "-" "
@@ -383,9 +387,18 @@ git push git2docker master
 - Deleting:
 
 ```
-./g2docker -remove --name=apache-demo
+g2docker -remove --name=apache-demo
 Please type yes or no and then press enter: yes
 | apache-demo                  Deleted |
+```
+
+- Get Environment Variables:
+
+```
+g2docker -env --name=apache-demo
+
+
+
 ```
 
 ####Nginx proxy:
@@ -427,17 +440,17 @@ Deploy any Container setting domain option in git2docker.conf and test.
 
 Example of /etc/hosts file:
 ```
-192.168.100.56	apache-demo.git2docker
-192.168.100.56	nodejs.git2docker
+192.168.100.56       apache-demo.git2docker
+192.168.100.56       nodejs.git2docker
 ```
 
 ##Integration with Databases:
 
-- Suported Databases:
+###Suported Databases:
 
-- - Redis
-- - Mysql
-- - Postgresql
+* Redis
+* Mysql
+* Postgresql - _In Development_
 
 ##Deploy Database:
 
@@ -471,13 +484,56 @@ password=dbpass
 database=dbname
 ```
 
-##Configuring the Application:
+##Deploy Application using Database:
 
-Database Server Address aways be "database"
+Database Server Address aways be **"database"**
 
 Example:
 
-PHP with Mysql:
+PHP with Mysql Using Dockerfile:
+
+```
+mkdir demo-php
+cd demo-php
+```
+
+* Dockerfile:
+```
+FROM php:5.6-apache
+EXPOSE 80
+RUN docker-php-ext-install mysql
+ADD index.php /var/www/html/index.php
+```
+
+* git2docker.conf
+```
+state=Dockerfile
+domain=apache.git2docker
+```
+
+* git2docker_db.conf
+```
+image=mysql
+user=dbuser
+password=dbpass
+database=dbname
+```
+
+* git2docker.sql 
+
+_If this file exist, git2docker will execute sql._
+
+```
+DROP TABLE IF EXISTS employees;
+CREATE TABLE employees (id INT, first_name VARCHAR(20), last_name VARCHAR(30));
+INSERT INTO employees (id, first_name, last_name) VALUES (1, 'Bill', 'Doe');
+INSERT INTO employees (id, first_name, last_name) VALUES (2, 'Bob', 'Smith');
+INSERT INTO employees (id, first_name, last_name) VALUES (3, 'Jane', 'Doe');
+
+```
+
+
+* index.php
 
 ```
 <?php
@@ -501,3 +557,14 @@ while($row = mysql_fetch_assoc($result)) {
 }
 ?> 
 ```
+
+##Deploy Example App:
+```
+git add --all
+git commit -m "build"
+git remote add git2docker user@192.168.100.56:demo-php
+
+git push git2docker master
+```
+
+
