@@ -34,6 +34,13 @@
         <h3>
 <a id="git2docker--server" class="anchor" href="#git2docker--server" aria-hidden="true"><span class="octicon octicon-link"></span></a>﻿Git2Docker – Server</h3>
 
+<h2>
+<a id="about" class="anchor" href="#about" aria-hidden="true"><span class="octicon octicon-link"></span></a>About:</h2>
+
+<p>Git2Docker.io Deploys apps and manages Containers with best practices right out of the box. Automatically doing all the things that were too complicated, expensive, or time consuming to do manually. And because it's open source.</p>
+
+<p>Git2docker is a software to simplify, you just need a git client, with git2docker you don't need install any other tools, You can Deploy, Delete, Shutdown, Start, View Logs and more.</p>
+
 <ul>
 <li>Install</li>
 </ul>
@@ -48,6 +55,9 @@ systemctl start sshd
 </code></pre>
 
 <p><em>Disable the Firewall</em>.</p>
+
+<pre><code>yast firewall disable
+</code></pre>
 
 <ul>
 <li>Installing - Git2Docker</li>
@@ -86,16 +96,16 @@ passwd user
 <a id="git2docker--client" class="anchor" href="#git2docker--client" aria-hidden="true"><span class="octicon octicon-link"></span></a>﻿Git2Docker – Client</h3>
 
 <pre><code>mkdir ~/.git2docker
-ssh-keygen -t dsa
-cp -rf ~/.ssh/id_rsa* ~/.git2docker/
-cat ~/.git2docker/id_rsa.pub | ssh user@192.168.100.56 git2docker
+ssh-keygen
+cp -rf ~/.ssh/id_rsa*
+cat ~/.ssh/id_rsa.pub | ssh user@192.168.100.56 git2docker
 </code></pre>
 
 <ul>
 <li>Downloading and installing the g2docker cli.</li>
 </ul>
 
-<pre><code>curl https://github.com/cooltrick/git2docker.io/raw/master/git2docker-client/linux/g2docker
+<pre><code>curl https://raw.githubusercontent.com/cooltrick/git2docker.io/master/git2docker-client/linux/g2docker -o g2docker
 chmod +x g2docker
 
 cat &gt;  ~/.git2docker/git2docker.conf &lt;&lt;EOF
@@ -116,6 +126,11 @@ cd git2docker.io/git2docker-client/linux
 make
 chmod +x g2docker
 cp -rf g2docker /usr/local/bin
+
+cat &gt;  ~/.git2docker/git2docker.conf &lt;&lt;EOF
+user=user
+host=192.168.100.56
+EOF
 </code></pre>
 
 <h3>
@@ -389,7 +404,7 @@ git push git2docker master
 </ul>
 
 <pre><code>
-./g2docker -ps
+g2docker -ps
 | apache-demo                    is Up |
 </code></pre>
 
@@ -398,7 +413,7 @@ git push git2docker master
 </ul>
 
 <pre><code>
-./g2docker -stop --name=apache-demo
+g2docker -stop --name=apache-demo
 | apache-demo                   Stoped |
 </code></pre>
 
@@ -407,7 +422,7 @@ git push git2docker master
 </ul>
 
 <pre><code>
-./g2docker -start --name=apache-demo
+g2docker -start --name=apache-demo
 | apache-demo                  Started |
 </code></pre>
 
@@ -416,7 +431,7 @@ git push git2docker master
 </ul>
 
 <pre><code>
-./g2docker -logs --name=apache-demo
+g2docker -logs --name=apache-demo
 172.17.0.3 - - [16/Apr/2015:15:08:45 +0000] "GET / HTTP/1.1" 200 22698 "-" "
 172.17.0.3 - - [16/Apr/2015:15:08:45 +0000] "GET / HTTP/1.1" 200 22698 "-" "
 172.17.0.3 - - [16/Apr/2015:15:08:45 +0000] "GET / HTTP/1.1" 200 22698 "-" "
@@ -429,9 +444,19 @@ git push git2docker master
 <li>Deleting:</li>
 </ul>
 
-<pre><code>./g2docker -remove --name=apache-demo
+<pre><code>g2docker -remove --name=apache-demo
 Please type yes or no and then press enter: yes
 | apache-demo                  Deleted |
+</code></pre>
+
+<ul>
+<li>Get Environment Variables:</li>
+</ul>
+
+<pre><code>g2docker -env --name=apache-demo
+
+
+
 </code></pre>
 
 <h4>
@@ -457,7 +482,6 @@ Requires=docker.service
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker kill nginx-proxy
 ExecStartPre=-/usr/bin/docker rm nginx-proxy
-ExecStartPre=/usr/bin/docker pull cooltrick/nginx-proxy
 ExecStart=/usr/bin/docker run -d --name=nginx-proxy -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock cooltrick/nginx-proxy
 
 [Install]
@@ -481,8 +505,141 @@ systemctl start nginx-proxy.service
 
 <p>Example of /etc/hosts file:</p>
 
-<pre><code>192.168.100.56  apache-demo.git2docker
-192.168.100.56  nodejs.git2docker
+<pre><code>192.168.100.56       apache-demo.git2docker
+192.168.100.56       nodejs.git2docker
+</code></pre>
+
+<h2>
+<a id="integration-with-databases" class="anchor" href="#integration-with-databases" aria-hidden="true"><span class="octicon octicon-link"></span></a>Integration with Databases:</h2>
+
+<h3>
+<a id="suported-databases" class="anchor" href="#suported-databases" aria-hidden="true"><span class="octicon octicon-link"></span></a>Suported Databases:</h3>
+
+<ul>
+<li>Redis</li>
+<li>Mysql</li>
+<li>Postgresql - <em>In Development</em>
+</li>
+</ul>
+
+<h2>
+<a id="deploy-database" class="anchor" href="#deploy-database" aria-hidden="true"><span class="octicon octicon-link"></span></a>Deploy Database:</h2>
+
+<p>To deploy database just create a git2docker_db.conf file.</p>
+
+<p>git2docker_db.conf Examples:</p>
+
+<p>Redis Example:</p>
+
+<pre><code>image=redis
+
+</code></pre>
+
+<p>Mysql Example:</p>
+
+<pre><code>image=mysql
+user=dbuser
+password=dbpass
+database=dbname
+</code></pre>
+
+<p>Postgresql Example:</p>
+
+<pre><code>image=mysql
+user=dbuser
+password=dbpass
+database=dbname
+</code></pre>
+
+<h2>
+<a id="deploy-application-using-database" class="anchor" href="#deploy-application-using-database" aria-hidden="true"><span class="octicon octicon-link"></span></a>Deploy Application using Database:</h2>
+
+<p>Database Server Address aways be <strong>"database"</strong></p>
+
+<p>Example:</p>
+
+<p>PHP with Mysql Using Dockerfile:</p>
+
+<pre><code>mkdir demo-php
+cd demo-php
+</code></pre>
+
+<ul>
+<li>Dockerfile:</li>
+</ul>
+
+<pre><code>FROM php:5.6-apache
+EXPOSE 80
+RUN docker-php-ext-install mysql
+ADD index.php /var/www/html/index.php
+</code></pre>
+
+<ul>
+<li>git2docker.conf</li>
+</ul>
+
+<pre><code>state=Dockerfile
+domain=apache.git2docker
+</code></pre>
+
+<ul>
+<li>git2docker_db.conf</li>
+</ul>
+
+<pre><code>image=mysql
+user=dbuser
+password=dbpass
+database=dbname
+</code></pre>
+
+<ul>
+<li>git2docker.sql </li>
+</ul>
+
+<p><em>If this file exist, git2docker will execute sql.</em></p>
+
+<pre><code>DROP TABLE IF EXISTS employees;
+CREATE TABLE employees (id INT, first_name VARCHAR(20), last_name VARCHAR(30));
+INSERT INTO employees (id, first_name, last_name) VALUES (1, 'Bill', 'Doe');
+INSERT INTO employees (id, first_name, last_name) VALUES (2, 'Bob', 'Smith');
+INSERT INTO employees (id, first_name, last_name) VALUES (3, 'Jane', 'Doe');
+
+</code></pre>
+
+<ul>
+<li>index.php</li>
+</ul>
+
+<pre><code>&lt;?php
+$servername = "database";
+$username = "dbuser";
+$password = "dbpass";
+$dbname = "dbname";
+
+$link = mysql_connect($servername, $username, $password);
+mysql_select_db($dbname, $link);
+mysql_set_charset('UTF-8', $link);
+
+
+$result = mysql_query('SELECT * from employees') or die(mysql_error());
+
+$num_rows = mysql_num_rows($result);
+
+while($row = mysql_fetch_assoc($result)) {
+   echo $row['first_name'].' '.$row['last_name']; //etc...
+   echo "&lt;br&gt;";
+}
+?&gt; 
+</code></pre>
+
+<h2>
+<a id="deploy-example-app" class="anchor" href="#deploy-example-app" aria-hidden="true"><span class="octicon octicon-link"></span></a>Deploy Example App:</h2>
+
+<pre><code>git add --all
+git commit -m "build"
+git remote add git2docker user@192.168.100.56:demo-php
+
+git push git2docker master
 </code></pre>
       </section>
     </div>
